@@ -120,9 +120,17 @@ if os.path.exists(static_dir):
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
-def main():
+def main(host="0.0.0.0", port=8000, reload=False):
+    """
+    Start the AgentUI server
+
+    Args:
+        host: Host to bind to (default: 0.0.0.0)
+        port: Port to bind to (default: 8000)
+        reload: Enable auto-reload for development (default: False)
+    """
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=host, port=port, reload=reload)
 
 
 if __name__ == "__main__":

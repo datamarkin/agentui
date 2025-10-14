@@ -63,8 +63,7 @@ Documentation = "https://github.com/datamarkin/agentui#readme"
 Issues = "https://github.com/datamarkin/agentui/issues"
 
 [project.scripts]
-agentui = "agentui.api.server:main"
-agentui-cli = "agentui.cli:main"
+agentui = "agentui.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["agentui*"]

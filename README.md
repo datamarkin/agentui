@@ -22,7 +22,7 @@ Think of it as a visual programming environment for computer vision tasks.
 pip install agentui
 
 # Start the server
-python -m agentui.api.server
+agentui start
 
 # Open http://localhost:8000 in your browser
 ```
@@ -177,7 +177,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -e .
 
 # Start server
-python -m agentui.api.server
+agentui start
 
 # Optional: UI development (only if modifying Svelte code)
 cd ui
