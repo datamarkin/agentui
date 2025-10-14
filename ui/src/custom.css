@@ -1,0 +1,497 @@
+/* Custom styles and Bulma overrides for Datamarkin */
+
+
+/*Start over*/
+.svelte-flow__background {
+    background-color: #ededed; /* Your desired color */
+}
+
+.svelte-flow__node-default {
+    width: unset;
+    border-radius: 1rem;
+    border: none;
+}
+
+.svelte-flow__node-input.selectable.selected, .svelte-flow__node-input.selectable:focus, .svelte-flow__node-input.selectable:focus-visible, .svelte-flow__node-default.selectable.selected, .svelte-flow__node-default.selectable:focus, .svelte-flow__node-default.selectable:focus-visible, .svelte-flow__node-output.selectable.selected, .svelte-flow__node-output.selectable:focus, .svelte-flow__node-output.selectable:focus-visible, .svelte-flow__node-group.selectable.selected, .svelte-flow__node-group.selectable:focus, .svelte-flow__node-group.selectable:focus-visible {
+    outline: 0.0625rem solid #afafaf; /* outer half */
+    box-shadow: inset 0 0 0 0.0625rem #afafaf; /* inner half */
+    transition: box-shadow .15s cubic-bezier(.19, 1, .22, 1);
+}
+
+.input-handle {
+    top: calc(-0.75rem / 2);
+}
+
+.output-handle {
+    bottom: calc(-0.75rem / 2);
+}
+
+.input-handle, .output-handle {
+    background: white;
+    opacity: 1;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: none;
+    transition: all 0.2s cubic-bezier(.19, 1, .22, 1);
+}
+
+.input-handle:hover {
+    border: 0.2rem solid #afafaf;
+    width: 1.25rem;
+    height: 1.25rem;
+    top: calc(-1.25rem / 2);
+}
+
+.output-handle:hover {
+    border: 0.2rem solid #afafaf;
+    width: 1.25rem;
+    height: 1.25rem;
+    bottom: calc(-1.25rem / 2);
+}
+
+.svelte-flow__node-default:has(.panel-block.inputs-connected) .input-handle, .svelte-flow__node-default:has(.panel-block.outputs-connected) .output-handle {
+    opacity: 0;
+}
+
+.svelte-flow__node-default:hover .input-handle, .svelte-flow__node-default:hover .output-handle {
+    opacity: 1 !important;
+}
+
+.svelte-flow__edge-path {
+    stroke-width: 0.125rem; /* Fixed - added colon */
+}
+
+.svelte-flow__connection-path {
+    stroke-width: 0.125rem;
+    /*stroke: #4a90e2;  !* Different color while connecting *!*/
+    /*stroke-dasharray: 5, 5;  !* Optional: dashed line *!*/
+}
+
+div[data-handleid="image"], div[data-handleid="annotated_image"], div[data-handleid="depth_map"], div[data-handleid="labeled_image"], div[data-handleid="blurred_image"] {
+    background: #ffb3ba;
+}
+
+/*https://www.color-hex.com/color-palette/5361*/
+div[data-handleid="detections"] {
+    background: #bae1ff;
+}
+
+
+/* Make selected edges even thicker */
+/*.svelte-flow__edge.selected .svelte-flow__edge-path {*/
+/*    stroke-width: 3;*/
+/*}*/
+
+/* Optional: Smooth edges */
+.svelte-flow__edge-path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/*Start over*/
+
+
+/* Font family for consistency */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+    --bulma-navbar-height: 4rem;
+}
+
+.is-size-8 {
+    font-size: .875rem !important;
+}
+
+.panel-block.node-panel-block {
+    cursor: pointer;
+}
+
+.panel-block.node-panel-block:hover {
+    background-color: var(--bulma-panel-block-hover-background-color);
+}
+
+#sidebar {
+    width: calc(25rem);
+    border-right: 1px solid rgb(221, 221, 221);
+}
+
+#studio {
+    height: calc(100vh - 4rem - 1px);
+    overflow: auto;
+}
+
+.main-content {
+    height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.border-bottom {
+    border-bottom: 1px solid rgb(221, 221, 221);
+}
+
+/* Node palette styles */
+.node-palette {
+    height: 100%;
+    padding: 16px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.node-palette h3 {
+    margin: 0 0 16px 0;
+    color: #343a40;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.node-category {
+    margin-bottom: 16px;
+}
+
+.node-category h4 {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.node-item:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.node-item:active {
+    cursor: grabbing;
+    transform: translateY(0);
+}
+
+/* Properties panel styles */
+.properties-panel {
+    height: 100%;
+    background: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    border-top: 1px solid #e9ecef;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.properties-panel h4 {
+    margin: 0 0 16px 0;
+    color: #343a40;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Port type colors - using CSS custom properties */
+.port-color-image {
+    background-color: #3B82F6;
+}
+
+.port-color-string {
+    background-color: #F59E0B;
+}
+
+.port-color-number {
+    background-color: #10B981;
+}
+
+.port-color-json {
+    background-color: #8B5CF6;
+}
+
+.port-color-array {
+    background-color: #EF4444;
+}
+
+.port-color-boolean {
+    background-color: #6B7280;
+}
+
+.port-color-default {
+    background-color: #6B7280;
+}
+
+
+/* NodePalette category styles */
+.category {
+    margin-bottom: 16px;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.category-header:hover {
+    background: #dee2e6;
+}
+
+.category-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-right: 0.75rem;
+}
+
+.category-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 14px;
+    color: #343a40;
+}
+
+.category-toggle {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.chevron-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #6c757d;
+}
+
+.category-nodes {
+    margin-top: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .workflow-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 300px;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .properties-panel {
+        width: 100%;
+        height: 150px;
+    }
+}
+
+/* Pending connection styling */
+.handle-pending {
+    border-color: #3498db !important;
+    background: #3498db !important;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.6) !important;
+    animation: pulse-pending 1.5s infinite;
+}
+
+@keyframes pulse-pending {
+    0% {
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.9);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.6);
+    }
+}
+
+/* Port type colors - we'll add data attributes directly to handles in a future update if needed */
+
+
+/*!* Hover effects *!*/
+/*.input-handle:hover, .output-handle:hover {*/
+/*    transform: scale(1.2);*/
+/*    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);*/
+/*}*/
+
+/* Node Palette Panel Styles (Fixed Left Side) */
+.node-palette-panel {
+    position: fixed;
+    top: calc(5rem + 1px);
+    left: 1rem;
+    max-height: 45rem;
+    width: 18rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    z-index: 1001;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.node-palette-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Drawer Sidebar Styles */
+.drawer-sidebar {
+    position: fixed;
+    top: calc(5rem + 1px);
+    right: 1rem;
+    /*height: calc(100vh - 4rem - 1px);*/
+    max-height: 45rem;
+    width: 20rem;
+    background: white;
+    border-left: 1px solid #e9ecef;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 1001;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+}
+
+.drawer-sidebar.is-open {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.drawer-close {
+    border: none !important;
+    background: transparent !important;
+    padding: 0.5rem;
+}
+
+.drawer-close:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    /*padding: 1rem;*/
+}
+
+.drawer-header-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.drawer-header-inline .drawer-close {
+    flex-shrink: 0;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem;
+    background: transparent !important;
+    border: none !important;
+    color: #6c757d;
+}
+
+.drawer-header-inline .drawer-close:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #495057;
+}
+
+.drawer-header-inline .block {
+    margin: 0 !important;
+    flex: 1;
+}
+
+
+/* Move custom Add Node button to top of SvelteFlow controls */
+.svelte-flow__controls {
+    display: flex;
+    flex-direction: column;
+}
+
+.svelte-flow__controls button:last-child {
+    order: -1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .drawer-sidebar {
+        width: 100vw;
+        max-width: 20rem;
+    }
+}
+
+/* Node Output Inspection Styles */
+.node-has-output {
+    /* Placeholder for future badge styling */
+}
+
+/* Output section in properties panel */
+.output-section {
+    width: 100%;
+}
+
+.output-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.output-name {
+    display: block;
+    font-weight: 600;
+    color: #363636;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.output-image {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    border: 1px solid #dbdbdb;
+}
+
+.output-data {
+    background: #ffffff;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    overflow-x: auto;
+    border: 1px solid #dbdbdb;
+    margin: 0;
+}
+
+.output-text {
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    border: 1px solid #dbdbdb;
+}
