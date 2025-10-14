@@ -3,9 +3,9 @@ __author__ = "Datamarkin"
 
 from .core.workflow import Workflow
 from .core.registry import registry
-from .core.node import Node, Connection
+from .core.tool import Tool, Connection
 
-__all__ = ['Workflow', 'registry', 'Node', 'Connection']
+__all__ = ['Workflow', 'registry', 'Tool', 'Connection']
 
 def hello():
     return "Welcome to AgentUI!"

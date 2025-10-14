@@ -38,10 +38,10 @@ async def root():
     return {"message": "AgentUI Workflow API"}
 
 
-@app.get("/api/nodes")
-async def get_available_nodes():
-    """Get all available node types and their information"""
-    return registry.get_all_node_info()
+@app.get("/api/tools")
+async def get_available_tools():
+    """Get all available tool types and their information"""
+    return registry.get_all_tool_info()
 
 
 @app.post("/api/workflow/execute", response_model=ExecuteResponse)
@@ -57,8 +57,8 @@ async def execute_workflow(request: WorkflowRequest):
 
         # Convert PIL Images to base64 for JSON serialization
         serializable_results = {}
-        for node_id, result in results.items():
-            serializable_results[node_id] = {
+        for tool_id, result in results.items():
+            serializable_results[tool_id] = {
                 'type': result['type'],
                 'outputs': {}
             }
@@ -69,11 +69,11 @@ async def execute_workflow(request: WorkflowRequest):
                     buffer = io.BytesIO()
                     output_value.save(buffer, format='JPEG')
                     img_str = base64.b64encode(buffer.getvalue()).decode()
-                    serializable_results[node_id]['outputs'][output_name] = f"data:image/jpeg;base64,{img_str}"
+                    serializable_results[tool_id]['outputs'][output_name] = f"data:image/jpeg;base64,{img_str}"
                 elif hasattr(output_value, 'to_dict'):  # PixelFlow Detections or similar
-                    serializable_results[node_id]['outputs'][output_name] = output_value.to_dict()
+                    serializable_results[tool_id]['outputs'][output_name] = output_value.to_dict()
                 else:
-                    serializable_results[node_id]['outputs'][output_name] = output_value
+                    serializable_results[tool_id]['outputs'][output_name] = output_value
 
         return ExecuteResponse(success=True, results=serializable_results)
 

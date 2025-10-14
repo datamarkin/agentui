@@ -1,140 +1,140 @@
 from typing import Dict, List, Type
-from ..core.node import Node
-from ..nodes.base_nodes import (
-    MediaInputNode,
-    ResizeNode,
-    BlurNode,
-    ConvertFormatNode,
-    SaveImageNode,
-    ImageToBase64Node
+from ..core.tool import Tool
+from ..tools.base_tools import (
+    MediaInputTool,
+    ResizeTool,
+    BlurTool,
+    ConvertFormatTool,
+    SaveImageTool,
+    ImageToBase64Tool
 )
-from ..nodes.cv_nodes import (
-    RotateNode,
-    FlipNode,
-    CropNode,
-    BrightnessNode,
-    ContrastNode,
-    SharpenNode,
-    EdgeDetectNode,
-    DominantColorNode,
-    QualityAnalysisNode,
-    ObjectDetectNode,
-    VisualizeDetectionsNode,
-    BlendImagesNode
+from ..tools.cv_tools import (
+    RotateTool,
+    FlipTool,
+    CropTool,
+    BrightnessTool,
+    ContrastTool,
+    SharpenTool,
+    EdgeDetectTool,
+    DominantColorTool,
+    QualityAnalysisTool,
+    ObjectDetectTool,
+    VisualizeDetectionsTool,
+    BlendImagesTool
 )
 
-# Import pixelflow nodes if available
+# Import pixelflow tools if available
 try:
-    from ..nodes.pixelflow_nodes import PIXELFLOW_NODES
+    from ..tools.pixelflow_tools import PIXELFLOW_TOOLS
     PIXELFLOW_AVAILABLE = True
 except ImportError:
-    PIXELFLOW_NODES = []
+    PIXELFLOW_TOOLS = []
     PIXELFLOW_AVAILABLE = False
 
-# Import model nodes if available
+# Import model tools if available
 try:
-    from ..nodes.model_nodes import MODEL_NODES
-    MODEL_NODES_AVAILABLE = True
+    from ..tools.model_tools import MODEL_TOOLS
+    MODEL_TOOLS_AVAILABLE = True
 except ImportError:
-    MODEL_NODES = []
-    MODEL_NODES_AVAILABLE = False
+    MODEL_TOOLS = []
+    MODEL_TOOLS_AVAILABLE = False
 
 
-class NodeRegistry:
-    """Registry for all available node types"""
+class ToolRegistry:
+    """Registry for all available tool types"""
 
     def __init__(self):
-        self._nodes: Dict[str, Type[Node]] = {}
-        self._register_builtin_nodes()
+        self._tools: Dict[str, Type[Tool]] = {}
+        self._register_builtin_tools()
 
-    def _register_builtin_nodes(self):
-        """Register all built-in node types"""
-        # Input/Output nodes
-        self.register(MediaInputNode)
-        self.register(SaveImageNode)
-        self.register(ImageToBase64Node)
+    def _register_builtin_tools(self):
+        """Register all built-in tool types"""
+        # Input/Output tools
+        self.register(MediaInputTool)
+        self.register(SaveImageTool)
+        self.register(ImageToBase64Tool)
 
         # Basic processing
-        self.register(ResizeNode)
-        self.register(BlurNode)
-        self.register(ConvertFormatNode)
+        self.register(ResizeTool)
+        self.register(BlurTool)
+        self.register(ConvertFormatTool)
 
         # Advanced transforms
-        self.register(RotateNode)
-        self.register(FlipNode)
-        self.register(CropNode)
+        self.register(RotateTool)
+        self.register(FlipTool)
+        self.register(CropTool)
 
         # Adjustments
-        self.register(BrightnessNode)
-        self.register(ContrastNode)
+        self.register(BrightnessTool)
+        self.register(ContrastTool)
 
         # Filters
-        self.register(SharpenNode)
-        self.register(EdgeDetectNode)
+        self.register(SharpenTool)
+        self.register(EdgeDetectTool)
 
         # Analysis
-        self.register(DominantColorNode)
-        self.register(QualityAnalysisNode)
+        self.register(DominantColorTool)
+        self.register(QualityAnalysisTool)
 
         # Detection (placeholder)
-        self.register(ObjectDetectNode)
+        self.register(ObjectDetectTool)
 
         # Combiners
-        self.register(VisualizeDetectionsNode)
-        self.register(BlendImagesNode)
+        self.register(VisualizeDetectionsTool)
+        self.register(BlendImagesTool)
 
-        # PixelFlow nodes (if available)
+        # PixelFlow tools (if available)
         if PIXELFLOW_AVAILABLE:
-            for node_class in PIXELFLOW_NODES:
-                self.register(node_class)
+            for tool_class in PIXELFLOW_TOOLS:
+                self.register(tool_class)
 
-        # Model nodes (if available)
-        if MODEL_NODES_AVAILABLE:
-            for node_class in MODEL_NODES:
-                self.register(node_class)
+        # Model tools (if available)
+        if MODEL_TOOLS_AVAILABLE:
+            for tool_class in MODEL_TOOLS:
+                self.register(tool_class)
 
-    def register(self, node_class: Type[Node]):
-        """Register a node class"""
-        node_instance = node_class()
-        self._nodes[node_instance.node_type] = node_class
+    def register(self, tool_class: Type[Tool]):
+        """Register a tool class"""
+        tool_instance = tool_class()
+        self._tools[tool_instance.tool_type] = tool_class
 
-    def get_node_class(self, node_type: str) -> Type[Node]:
-        """Get node class by type"""
-        if node_type not in self._nodes:
-            raise ValueError(f"Unknown node type: {node_type}")
-        return self._nodes[node_type]
+    def get_tool_class(self, tool_type: str) -> Type[Tool]:
+        """Get tool class by type"""
+        if tool_type not in self._tools:
+            raise ValueError(f"Unknown tool type: {tool_type}")
+        return self._tools[tool_type]
 
-    def get_all_types(self) -> Dict[str, Type[Node]]:
-        """Get all registered node types"""
-        return self._nodes.copy()
+    def get_all_types(self) -> Dict[str, Type[Tool]]:
+        """Get all registered tool types"""
+        return self._tools.copy()
 
-    def get_node_info(self, node_type: str) -> Dict[str, any]:
-        """Get information about a node type for the UI"""
-        node_class = self.get_node_class(node_type)
-        instance = node_class()
+    def get_tool_info(self, tool_type: str) -> Dict[str, any]:
+        """Get information about a tool type for the UI"""
+        tool_class = self.get_tool_class(tool_type)
+        instance = tool_class()
 
         return {
-            'type': node_type,
-            'name': self._get_node_name(node_type),
+            'type': tool_type,
+            'name': self._get_tool_name(tool_type),
             'inputs': instance.input_types,
             'outputs': instance.output_types,
-            'parameters': self._get_default_parameters(node_type),
-            'ports': instance.get_node_info(),
-            'category': self._get_node_category(node_type),
-            'description': self._get_node_description(node_type),
-            'parameter_options': self._get_parameter_options(node_type),
-            'required_inputs': self.get_required_inputs(node_type),
-            'optional_inputs': self.get_optional_inputs(node_type)
+            'parameters': self._get_default_parameters(tool_type),
+            'ports': instance.get_tool_info(),
+            'category': self._get_tool_category(tool_type),
+            'description': self._get_tool_description(tool_type),
+            'parameter_options': self._get_parameter_options(tool_type),
+            'required_inputs': self.get_required_inputs(tool_type),
+            'optional_inputs': self.get_optional_inputs(tool_type)
         }
 
-    # Unified node metadata - single source of truth
-    NODE_METADATA = {
+    # Unified tool metadata - single source of truth
+    TOOL_METADATA = {
         # Input/Output
         'MediaInput': {
             'name': 'Media Input',
             'category': 'Input/Output',
             'description': 'Load media (images, videos) from file or base64 data',
-            'required_inputs': [],  # No inputs for input nodes
+            'required_inputs': [],  # No inputs for input tools
             'optional_inputs': [],
             'parameters': {
                 'path': '',
@@ -433,7 +433,7 @@ class NodeRegistry:
             }
         },
 
-        # PixelFlow nodes (external library integration)
+        # PixelFlow tools (external library integration)
         'DrawBoundingBoxes': {
             'name': 'Draw Bounding Boxes',
             'category': 'Annotation',
@@ -522,7 +522,7 @@ class NodeRegistry:
             'parameters': {}
         },
 
-        # Model nodes (Mozo integration)
+        # Model tools (Mozo integration)
         'ObjectDetection': {
             'name': 'Object Detection',
             'category': 'Models',
@@ -645,39 +645,39 @@ class NodeRegistry:
         }
     }
 
-    def _get_default_parameters(self, node_type: str) -> Dict[str, any]:
-        """Get default parameters for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('parameters', {})
+    def _get_default_parameters(self, tool_type: str) -> Dict[str, any]:
+        """Get default parameters for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('parameters', {})
 
-    def _get_node_category(self, node_type: str) -> str:
-        """Get category for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('category', 'Other')
+    def _get_tool_category(self, tool_type: str) -> str:
+        """Get category for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('category', 'Other')
 
 
-    def _get_node_description(self, node_type: str) -> str:
-        """Get description for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('description', 'Process image')
+    def _get_tool_description(self, tool_type: str) -> str:
+        """Get description for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('description', 'Process image')
 
-    def _get_node_name(self, node_type: str) -> str:
-        """Get display name for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('name', node_type)
+    def _get_tool_name(self, tool_type: str) -> str:
+        """Get display name for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('name', tool_type)
 
-    def _get_parameter_options(self, node_type: str) -> Dict[str, any]:
-        """Get parameter options for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('parameter_options', {})
+    def _get_parameter_options(self, tool_type: str) -> Dict[str, any]:
+        """Get parameter options for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('parameter_options', {})
 
-    def get_required_inputs(self, node_type: str) -> List[str]:
-        """Get required inputs for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('required_inputs', [])
+    def get_required_inputs(self, tool_type: str) -> List[str]:
+        """Get required inputs for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('required_inputs', [])
 
-    def get_optional_inputs(self, node_type: str) -> List[str]:
-        """Get optional inputs for a node type"""
-        return self.NODE_METADATA.get(node_type, {}).get('optional_inputs', [])
+    def get_optional_inputs(self, tool_type: str) -> List[str]:
+        """Get optional inputs for a tool type"""
+        return self.TOOL_METADATA.get(tool_type, {}).get('optional_inputs', [])
 
-    def get_all_node_info(self) -> Dict[str, Dict[str, any]]:
-        """Get information about all node types"""
-        return {node_type: self.get_node_info(node_type) for node_type in self._nodes.keys()}
+    def get_all_tool_info(self) -> Dict[str, Dict[str, any]]:
+        """Get information about all tool types"""
+        return {tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()}
 
 
 # Global registry instance
-registry = NodeRegistry()
+registry = ToolRegistry()

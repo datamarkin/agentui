@@ -5,17 +5,17 @@ from typing import Dict, Any
 from PIL import Image, ImageFilter
 import numpy as np
 
-from ..core.node import (
-    Node, NodeOutput, Port, PortType,
-    InputNode
+from ..core.tool import (
+    Tool, ToolOutput, Port, PortType,
+    InputTool
 )
 
 
-class MediaInputNode(InputNode):
-    """Input node for loading media (images, videos, etc.)"""
+class MediaInputTool(InputTool):
+    """Input tool for loading media (images, videos, etc.)"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "MediaInput"
 
     @property
@@ -36,18 +36,18 @@ class MediaInputNode(InputNode):
             else:
                 return False
 
-            self.outputs["image"] = NodeOutput(image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"MediaInput error: {e}")
             return False
 
 
-class ResizeNode(Node):
-    """Resize image node"""
+class ResizeTool(Tool):
+    """Resize image tool"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Resize"
 
     @property
@@ -68,18 +68,18 @@ class ResizeNode(Node):
             height = self.parameters.get('height', 600)
 
             resized_image = image.resize((width, height), Image.LANCZOS)
-            self.outputs["image"] = NodeOutput(resized_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(resized_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Resize error: {e}")
             return False
 
 
-class BlurNode(Node):
+class BlurTool(Tool):
     """Apply blur filter to image"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Blur"
 
     @property
@@ -99,18 +99,18 @@ class BlurNode(Node):
             radius = self.parameters.get('radius', 2.0)
 
             blurred_image = image.filter(ImageFilter.GaussianBlur(radius=radius))
-            self.outputs["image"] = NodeOutput(blurred_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(blurred_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Blur error: {e}")
             return False
 
 
-class ConvertFormatNode(Node):
+class ConvertFormatTool(Tool):
     """Convert image format"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ConvertFormat"
 
     @property
@@ -138,18 +138,18 @@ class ConvertFormatNode(Node):
             else:
                 converted_image = image
 
-            self.outputs["image"] = NodeOutput(converted_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(converted_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"ConvertFormat error: {e}")
             return False
 
 
-class SaveImageNode(Node):
+class SaveImageTool(Tool):
     """Save image to file"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "SaveImage"
 
     @property
@@ -172,18 +172,18 @@ class SaveImageNode(Node):
             os.makedirs(os.path.dirname(path) if os.path.dirname(path) else '.', exist_ok=True)
 
             image.save(path)
-            self.outputs["path"] = NodeOutput(path, PortType.STRING)
+            self.outputs["path"] = ToolOutput(path, PortType.STRING)
             return True
         except Exception as e:
             print(f"SaveImage error: {e}")
             return False
 
 
-class ImageToBase64Node(Node):
+class ImageToBase64Tool(Tool):
     """Convert image to base64 string for web display"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ImageToBase64"
 
     @property
@@ -204,7 +204,7 @@ class ImageToBase64Node(Node):
             image.save(buffer, format='JPEG')
             img_str = base64.b64encode(buffer.getvalue()).decode()
 
-            self.outputs["base64"] = NodeOutput(f"data:image/jpeg;base64,{img_str}", PortType.STRING)
+            self.outputs["base64"] = ToolOutput(f"data:image/jpeg;base64,{img_str}", PortType.STRING)
             return True
         except Exception as e:
             print(f"ImageToBase64 error: {e}")

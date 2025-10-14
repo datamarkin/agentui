@@ -41,16 +41,16 @@
 
     onMount(async () => {
         console.log('App onMount started');
-        // Fetch available node types
+        // Fetch available tool types
         try {
-            const response = await fetch('/api/nodes');
-            const nodeTypes = await response.json();
-            console.log('Node types fetched:', nodeTypes);
-            availableNodes.set(nodeTypes);
+            const response = await fetch('/api/tools');
+            const toolTypes = await response.json();
+            console.log('Tool types fetched:', toolTypes);
+            availableNodes.set(toolTypes);
 
             console.log('App initialized successfully');
         } catch (error) {
-            console.error('Failed to fetch node types:', error);
+            console.error('Failed to fetch tool types:', error);
         }
     });
 

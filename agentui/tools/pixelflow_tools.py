@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional
 import numpy as np
 from PIL import Image
 
-from ..core.node import Node, NodeOutput, Port, PortType
+from ..core.tool import Tool, ToolOutput, Port, PortType
 
 # Try to import pixelflow library
 try:
@@ -22,7 +22,7 @@ except ImportError:
     print("Warning: pixelflow library not installed. Install with: pip install pixelflow")
 
 
-class PixelFlowNodeBase(Node):
+class PixelFlowToolBase(Tool):
     """Base class for nodes using the external pixelflow library"""
 
     def __init__(self, node_id: Optional[str] = None, **kwargs):
@@ -32,11 +32,11 @@ class PixelFlowNodeBase(Node):
 
 
 # Annotation Nodes
-class DrawBoundingBoxes(PixelFlowNodeBase):
+class DrawBoundingBoxes(PixelFlowToolBase):
     """Draw bounding boxes on image using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "DrawBoundingBoxes"
 
     @property
@@ -89,7 +89,7 @@ class DrawBoundingBoxes(PixelFlowNodeBase):
             if isinstance(annotated, np.ndarray):
                 annotated = Image.fromarray(annotated)
 
-            self.outputs["annotated_image"] = NodeOutput(annotated, PortType.IMAGE)
+            self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -99,11 +99,11 @@ class DrawBoundingBoxes(PixelFlowNodeBase):
             return False
 
 
-class AddLabels(PixelFlowNodeBase):
+class AddLabels(PixelFlowToolBase):
     """Add text labels to detections using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "AddLabels"
 
     @property
@@ -154,7 +154,7 @@ class AddLabels(PixelFlowNodeBase):
             if isinstance(labeled, np.ndarray):
                 labeled = Image.fromarray(labeled)
 
-            self.outputs["labeled_image"] = NodeOutput(labeled, PortType.IMAGE)
+            self.outputs["labeled_image"] = ToolOutput(labeled, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -162,11 +162,11 @@ class AddLabels(PixelFlowNodeBase):
             return False
 
 
-class BlurRegions(PixelFlowNodeBase):
+class BlurRegions(PixelFlowToolBase):
     """Apply blur effect to specified regions using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "BlurRegions"
 
     @property
@@ -215,7 +215,7 @@ class BlurRegions(PixelFlowNodeBase):
             if isinstance(blurred, np.ndarray):
                 blurred = Image.fromarray(blurred)
 
-            self.outputs["blurred_image"] = NodeOutput(blurred, PortType.IMAGE)
+            self.outputs["blurred_image"] = ToolOutput(blurred, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -223,11 +223,11 @@ class BlurRegions(PixelFlowNodeBase):
             return False
 
 
-class PixelateRegions(PixelFlowNodeBase):
+class PixelateRegions(PixelFlowToolBase):
     """Apply pixelation effect to specified regions using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "PixelateRegions"
 
     @property
@@ -275,7 +275,7 @@ class PixelateRegions(PixelFlowNodeBase):
             if isinstance(pixelated, np.ndarray):
                 pixelated = Image.fromarray(pixelated)
 
-            self.outputs["pixelated_image"] = NodeOutput(pixelated, PortType.IMAGE)
+            self.outputs["pixelated_image"] = ToolOutput(pixelated, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -283,11 +283,11 @@ class PixelateRegions(PixelFlowNodeBase):
             return False
 
 
-class DrawMasks(PixelFlowNodeBase):
+class DrawMasks(PixelFlowToolBase):
     """Draw segmentation masks using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "DrawMasks"
 
     @property
@@ -336,7 +336,7 @@ class DrawMasks(PixelFlowNodeBase):
             if isinstance(masked, np.ndarray):
                 masked = Image.fromarray(masked)
 
-            self.outputs["masked_image"] = NodeOutput(masked, PortType.IMAGE)
+            self.outputs["masked_image"] = ToolOutput(masked, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -344,11 +344,11 @@ class DrawMasks(PixelFlowNodeBase):
             return False
 
 
-class DrawPolygons(PixelFlowNodeBase):
+class DrawPolygons(PixelFlowToolBase):
     """Draw polygon shapes using pixelflow"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "DrawPolygons"
 
     @property
@@ -398,7 +398,7 @@ class DrawPolygons(PixelFlowNodeBase):
             if isinstance(annotated, np.ndarray):
                 annotated = Image.fromarray(annotated)
 
-            self.outputs["annotated_image"] = NodeOutput(annotated, PortType.IMAGE)
+            self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -407,7 +407,7 @@ class DrawPolygons(PixelFlowNodeBase):
 
 
 # Tracking Node
-class ObjectTracker(PixelFlowNodeBase):
+class ObjectTracker(PixelFlowToolBase):
     """Track objects across frames using pixelflow"""
 
     def __init__(self, node_id: Optional[str] = None, **kwargs):
@@ -415,7 +415,7 @@ class ObjectTracker(PixelFlowNodeBase):
         self.tracker = None
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ObjectTracker"
 
     @property
@@ -462,7 +462,7 @@ class ObjectTracker(PixelFlowNodeBase):
             # Update tracker with new detections
             tracked_objects = self.tracker.update(detections, image)
 
-            self.outputs["tracked_objects"] = NodeOutput(tracked_objects, PortType.JSON)
+            self.outputs["tracked_objects"] = ToolOutput(tracked_objects, PortType.JSON)
             return True
 
         except Exception as e:
@@ -471,7 +471,7 @@ class ObjectTracker(PixelFlowNodeBase):
 
 
 # Spatial Analysis Nodes
-class ZoneAnalyzer(PixelFlowNodeBase):
+class ZoneAnalyzer(PixelFlowToolBase):
     """Analyze object presence in defined zones using pixelflow"""
 
     def __init__(self, node_id: Optional[str] = None, **kwargs):
@@ -479,7 +479,7 @@ class ZoneAnalyzer(PixelFlowNodeBase):
         self.zones = None
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ZoneAnalyzer"
 
     @property
@@ -536,8 +536,8 @@ class ZoneAnalyzer(PixelFlowNodeBase):
             if isinstance(annotated, np.ndarray):
                 annotated = Image.fromarray(annotated)
 
-            self.outputs["zone_analysis"] = NodeOutput(zone_analysis, PortType.JSON)
-            self.outputs["annotated_image"] = NodeOutput(annotated, PortType.IMAGE)
+            self.outputs["zone_analysis"] = ToolOutput(zone_analysis, PortType.JSON)
+            self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
             return True
 
         except Exception as e:
@@ -546,7 +546,7 @@ class ZoneAnalyzer(PixelFlowNodeBase):
 
 
 # Export available nodes
-PIXELFLOW_NODES = [
+PIXELFLOW_TOOLS = [
     DrawBoundingBoxes,
     AddLabels,
     BlurRegions,

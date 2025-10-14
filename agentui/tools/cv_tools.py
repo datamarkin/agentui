@@ -8,18 +8,18 @@ from typing import Dict, Any, List, Tuple
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
-from ..core.node import (
-    Node, NodeOutput, Port, PortType
+from ..core.tool import (
+    Tool, ToolOutput, Port, PortType
 )
 from ..pixelflow import transforms, filters, adjustments
 
 
 # Transform nodes using PixelFlow
-class RotateNode(Node):
+class RotateTool(Tool):
     """Rotate image by specified angle"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Rotate"
 
     @property
@@ -39,18 +39,18 @@ class RotateNode(Node):
             angle = self.parameters.get('angle', 0)
 
             rotated_image = transforms.rotate(image, angle)
-            self.outputs["image"] = NodeOutput(rotated_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(rotated_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Rotate error: {e}")
             return False
 
 
-class FlipNode(Node):
+class FlipTool(Tool):
     """Flip image horizontally or vertically"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Flip"
 
     @property
@@ -74,18 +74,18 @@ class FlipNode(Node):
             else:
                 flipped_image = transforms.flip_vertical(image)
 
-            self.outputs["image"] = NodeOutput(flipped_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(flipped_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Flip error: {e}")
             return False
 
 
-class CropNode(Node):
+class CropTool(Tool):
     """Crop image to specified rectangle"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Crop"
 
     @property
@@ -108,18 +108,18 @@ class CropNode(Node):
             height = self.parameters.get('height', 100)
 
             cropped_image = transforms.crop(image, x, y, width, height)
-            self.outputs["image"] = NodeOutput(cropped_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(cropped_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Crop error: {e}")
             return False
 
 
-class BrightnessNode(Node):
+class BrightnessTool(Tool):
     """Adjust image brightness"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Brightness"
 
     @property
@@ -139,18 +139,18 @@ class BrightnessNode(Node):
             factor = self.parameters.get('factor', 1.0)
 
             bright_image = adjustments.brightness(image, factor)
-            self.outputs["image"] = NodeOutput(bright_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(bright_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Brightness error: {e}")
             return False
 
 
-class ContrastNode(Node):
+class ContrastTool(Tool):
     """Adjust image contrast"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Contrast"
 
     @property
@@ -170,18 +170,18 @@ class ContrastNode(Node):
             factor = self.parameters.get('factor', 1.0)
 
             contrast_image = adjustments.contrast(image, factor)
-            self.outputs["image"] = NodeOutput(contrast_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(contrast_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Contrast error: {e}")
             return False
 
 
-class SharpenNode(Node):
+class SharpenTool(Tool):
     """Sharpen image"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "Sharpen"
 
     @property
@@ -201,18 +201,18 @@ class SharpenNode(Node):
             factor = self.parameters.get('factor', 1.0)
 
             sharp_image = filters.sharpen(image, factor)
-            self.outputs["image"] = NodeOutput(sharp_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(sharp_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"Sharpen error: {e}")
             return False
 
 
-class EdgeDetectNode(Node):
+class EdgeDetectTool(Tool):
     """Detect edges in image"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "EdgeDetect"
 
     @property
@@ -230,7 +230,7 @@ class EdgeDetectNode(Node):
 
             image = self.inputs["image"].data
             edge_image = filters.edge_detect(image)
-            self.outputs["image"] = NodeOutput(edge_image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(edge_image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"EdgeDetect error: {e}")
@@ -238,11 +238,11 @@ class EdgeDetectNode(Node):
 
 
 # Analysis nodes
-class DominantColorNode(Node):
+class DominantColorTool(Tool):
     """Extract dominant color from image"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "DominantColor"
 
     @property
@@ -279,19 +279,19 @@ class DominantColorNode(Node):
             hex_color = f"#{r:02x}{g:02x}{b:02x}"
             rgb_obj = {"r": r, "g": g, "b": b}
 
-            self.outputs["color"] = NodeOutput(hex_color, PortType.STRING)
-            self.outputs["rgb"] = NodeOutput(rgb_obj, PortType.JSON)
+            self.outputs["color"] = ToolOutput(hex_color, PortType.STRING)
+            self.outputs["rgb"] = ToolOutput(rgb_obj, PortType.JSON)
             return True
         except Exception as e:
             print(f"DominantColor error: {e}")
             return False
 
 
-class QualityAnalysisNode(Node):
+class QualityAnalysisTool(Tool):
     """Analyze image quality metrics"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "QualityAnalysis"
 
     @property
@@ -339,8 +339,8 @@ class QualityAnalysisNode(Node):
                 "pixel_count": pixel_count
             }
 
-            self.outputs["quality_score"] = NodeOutput(quality_score, PortType.NUMBER)
-            self.outputs["metrics"] = NodeOutput(metrics, PortType.JSON)
+            self.outputs["quality_score"] = ToolOutput(quality_score, PortType.NUMBER)
+            self.outputs["metrics"] = ToolOutput(metrics, PortType.JSON)
             return True
         except Exception as e:
             print(f"QualityAnalysis error: {e}")
@@ -348,11 +348,11 @@ class QualityAnalysisNode(Node):
 
 
 # Placeholder detection node (would require ML model)
-class ObjectDetectNode(Node):
+class ObjectDetectTool(Tool):
     """Detect objects in image using YOLO (placeholder)"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ObjectDetect"
 
     @property
@@ -385,7 +385,7 @@ class ObjectDetectNode(Node):
                 }
             ]
 
-            self.outputs["detections"] = NodeOutput(detections, PortType.JSON)
+            self.outputs["detections"] = ToolOutput(detections, PortType.JSON)
             return True
         except Exception as e:
             print(f"ObjectDetect error: {e}")
@@ -393,11 +393,11 @@ class ObjectDetectNode(Node):
 
 
 # Combiner nodes
-class VisualizeDetectionsNode(Node):
+class VisualizeDetectionsTool(Tool):
     """Draw detection boxes on image"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "VisualizeDetections"
 
     @property
@@ -435,18 +435,18 @@ class VisualizeDetectionsNode(Node):
                 label = f"{class_name}: {confidence:.2f}"
                 draw.text((x, y - 20), label, fill="red")
 
-            self.outputs["image"] = NodeOutput(image, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"VisualizeDetections error: {e}")
             return False
 
 
-class BlendImagesNode(Node):
+class BlendImagesTool(Tool):
     """Blend two images together"""
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "BlendImages"
 
     @property
@@ -475,7 +475,7 @@ class BlendImagesNode(Node):
             # Blend images
             blended = Image.blend(bg, fg_resized, alpha)
 
-            self.outputs["image"] = NodeOutput(blended, PortType.IMAGE)
+            self.outputs["image"] = ToolOutput(blended, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"BlendImages error: {e}")

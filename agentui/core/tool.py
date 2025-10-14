@@ -5,7 +5,7 @@ import uuid
 
 
 class PortType(Enum):
-    """Defines the types of data that can flow between nodes"""
+    """Defines the types of data that can flow between tools"""
     IMAGE = "image"
     STRING = "string"
     NUMBER = "number"
@@ -17,7 +17,7 @@ class PortType(Enum):
 
 
 class Port:
-    """Represents an input or output port on a node"""
+    """Represents an input or output port on a tool"""
     def __init__(self, name: str, port_type: PortType, description: str = ""):
         self.name = name
         self.type = port_type
@@ -27,8 +27,8 @@ class Port:
         return f"Port({self.name}: {self.type.value})"
 
 
-class NodeOutput:
-    """Represents an output from a node"""
+class ToolOutput:
+    """Represents an output from a tool"""
     def __init__(self, data: Any, port_type: PortType):
         self.data = data
         self.port_type = port_type
@@ -39,31 +39,31 @@ class NodeOutput:
         return self.port_type.value
 
 
-class Node(ABC):
-    """Base class for all workflow nodes"""
+class Tool(ABC):
+    """Base class for all agent tools"""
 
-    def __init__(self, node_id: Optional[str] = None, **kwargs):
-        self.id = node_id or str(uuid.uuid4())
+    def __init__(self, tool_id: Optional[str] = None, **kwargs):
+        self.id = tool_id or str(uuid.uuid4())
         self.inputs: Dict[str, Any] = {}
-        self.outputs: Dict[str, NodeOutput] = {}
+        self.outputs: Dict[str, ToolOutput] = {}
         self.parameters = kwargs
 
     @property
     @abstractmethod
-    def node_type(self) -> str:
-        """Return the type identifier for this node"""
+    def tool_type(self) -> str:
+        """Return the type identifier for this tool"""
         pass
 
     @property
     @abstractmethod
     def input_ports(self) -> Dict[str, Port]:
-        """Return input ports for this node"""
+        """Return input ports for this tool"""
         pass
 
     @property
     @abstractmethod
     def output_ports(self) -> Dict[str, Port]:
-        """Return output ports for this node"""
+        """Return output ports for this tool"""
         pass
 
     @property
@@ -77,9 +77,9 @@ class Node(ABC):
         return {name: port.type.value for name, port in self.output_ports.items()}
 
     def set_input(self, name: str, value: Any, port_type: Union[PortType, str]):
-        """Set an input value for this node"""
+        """Set an input value for this tool"""
         if name not in self.input_ports:
-            raise ValueError(f"Node {self.node_type} does not accept input '{name}'")
+            raise ValueError(f"Tool {self.tool_type} does not accept input '{name}'")
 
         # Convert string to PortType for backward compatibility
         if isinstance(port_type, str):
@@ -89,15 +89,15 @@ class Node(ABC):
         if expected_port.type != PortType.ANY and port_type != expected_port.type:
             raise TypeError(f"Expected input type '{expected_port.type.value}' but got '{port_type.value}'")
 
-        self.inputs[name] = NodeOutput(value, port_type)
+        self.inputs[name] = ToolOutput(value, port_type)
 
-    def get_output(self, name: str) -> Optional[NodeOutput]:
-        """Get an output value from this node"""
+    def get_output(self, name: str) -> Optional[ToolOutput]:
+        """Get an output value from this tool"""
         return self.outputs.get(name)
 
     @abstractmethod
     def process(self) -> bool:
-        """Execute the node's processing logic. Returns True if successful."""
+        """Execute the tool's processing logic. Returns True if successful."""
         pass
 
     def process_with_auto_batching(self) -> bool:
@@ -107,12 +107,12 @@ class Node(ABC):
         single_inputs = {}
         max_list_size = 1
 
-        for name, node_output in self.inputs.items():
-            if isinstance(node_output.data, list):
-                list_inputs[name] = node_output.data
-                max_list_size = max(max_list_size, len(node_output.data))
+        for name, tool_output in self.inputs.items():
+            if isinstance(tool_output.data, list):
+                list_inputs[name] = tool_output.data
+                max_list_size = max(max_list_size, len(tool_output.data))
             else:
-                single_inputs[name] = node_output.data
+                single_inputs[name] = tool_output.data
 
         if not list_inputs:
             # No list inputs, process normally
@@ -126,11 +126,11 @@ class Node(ABC):
 
             for name, value in list_inputs.items():
                 index = min(i, len(value) - 1)  # Use last item if list is shorter
-                self.inputs[name] = NodeOutput(value[index], self.inputs[name].port_type)
+                self.inputs[name] = ToolOutput(value[index], self.inputs[name].port_type)
 
             # Single inputs stay the same
             for name, value in single_inputs.items():
-                self.inputs[name] = NodeOutput(value, self.inputs[name].port_type)
+                self.inputs[name] = ToolOutput(value, self.inputs[name].port_type)
 
             # Process this batch item
             if not self.process():
@@ -150,27 +150,27 @@ class Node(ABC):
         # Combine batch results into list outputs
         for output_name in self.outputs.keys():
             output_list = [result[output_name] for result in batch_results]
-            self.outputs[output_name] = NodeOutput(output_list, self.outputs[output_name].port_type)
+            self.outputs[output_name] = ToolOutput(output_list, self.outputs[output_name].port_type)
 
         return True
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize node to dictionary"""
+        """Serialize tool to dictionary"""
         return {
             'id': self.id,
-            'type': self.node_type,
+            'type': self.tool_type,
             'parameters': self.parameters
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Node':
-        """Deserialize node from dictionary"""
-        return cls(node_id=data['id'], **data.get('parameters', {}))
+    def from_dict(cls, data: Dict[str, Any]) -> 'Tool':
+        """Deserialize tool from dictionary"""
+        return cls(tool_id=data['id'], **data.get('parameters', {}))
 
-    def get_node_info(self) -> Dict[str, Any]:
-        """Get node information for UI"""
+    def get_tool_info(self) -> Dict[str, Any]:
+        """Get tool information for UI"""
         return {
-            "type": self.node_type,
+            "type": self.tool_type,
             "inputs": {name: {"type": port.type.value, "description": port.description}
                       for name, port in self.input_ports.items()},
             "outputs": {name: {"type": port.type.value, "description": port.description}
@@ -181,20 +181,20 @@ class Node(ABC):
 
 # Simplified base classes
 
-class InputNode(Node):
-    """Base class for input nodes - can only output, no input connections"""
+class InputTool(Tool):
+    """Base class for input tools - can only output, no input connections"""
 
     @property
     def input_ports(self) -> Dict[str, Port]:
         return {}  # No inputs allowed
 
     def can_accept_input(self, port_name: str) -> bool:
-        """Input nodes cannot accept any inputs"""
+        """Input tools cannot accept any inputs"""
         return False
 
 
 class Connection:
-    """Represents a connection between two nodes"""
+    """Represents a connection between two tools"""
 
     def __init__(self, source_id: str, source_output: str, target_id: str, target_input: str):
         self.source_id = source_id

@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 import cv2
 
-from ..core.node import Node, NodeOutput, Port, PortType
+from ..core.tool import Tool, ToolOutput, Port, PortType
 
 # Try to import mozo library
 try:
@@ -31,7 +31,7 @@ except ImportError:
     print("Warning: pixelflow library not installed. Install with: pip install pixelflow")
 
 
-class MozoModelNodeBase(Node):
+class MozoModelToolBase(Tool):
     """
     Base class for nodes using the Mozo model serving library.
 
@@ -60,13 +60,13 @@ class MozoModelNodeBase(Node):
             )
 
         # Initialize shared model manager if not already done
-        if MozoModelNodeBase._model_manager is None:
-            MozoModelNodeBase._model_manager = ModelManager()
+        if MozoModelToolBase._model_manager is None:
+            MozoModelToolBase._model_manager = ModelManager()
 
     @property
     def model_manager(self) -> ModelManager:
         """Get the shared model manager instance"""
-        return MozoModelNodeBase._model_manager
+        return MozoModelToolBase._model_manager
 
     @staticmethod
     def pil_to_cv2(image: Image.Image) -> np.ndarray:
@@ -117,7 +117,7 @@ class MozoModelNodeBase(Node):
         return 0
 
 
-class ObjectDetection(MozoModelNodeBase):
+class ObjectDetection(MozoModelToolBase):
     """
     Universal object detection supporting multiple frameworks via Mozo.
 
@@ -131,7 +131,7 @@ class ObjectDetection(MozoModelNodeBase):
     """
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "ObjectDetection"
 
     @property
@@ -181,7 +181,7 @@ class ObjectDetection(MozoModelNodeBase):
             # Set outputs
             # Note: We output the PixelFlow Detections object directly
             # It can be converted to dict/json later if needed
-            self.outputs["detections"] = NodeOutput(detections, PortType.DETECTIONS)
+            self.outputs["detections"] = ToolOutput(detections, PortType.DETECTIONS)
 
             return True
 
@@ -192,7 +192,7 @@ class ObjectDetection(MozoModelNodeBase):
             return False
 
 
-class InstanceSegmentation(MozoModelNodeBase):
+class InstanceSegmentation(MozoModelToolBase):
     """
     Universal instance segmentation supporting multiple frameworks via Mozo.
 
@@ -211,7 +211,7 @@ class InstanceSegmentation(MozoModelNodeBase):
     """
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "InstanceSegmentation"
 
     @property
@@ -261,7 +261,7 @@ class InstanceSegmentation(MozoModelNodeBase):
             print(f"{self.node_type}: Found {len(detections)} detections ({mask_count} with masks)")
 
             # Set outputs
-            self.outputs["detections"] = NodeOutput(detections, PortType.DETECTIONS)
+            self.outputs["detections"] = ToolOutput(detections, PortType.DETECTIONS)
 
             return True
 
@@ -272,7 +272,7 @@ class InstanceSegmentation(MozoModelNodeBase):
             return False
 
 
-class DepthEstimation(MozoModelNodeBase):
+class DepthEstimation(MozoModelToolBase):
     """
     Monocular depth estimation using Depth Anything models via Mozo.
 
@@ -287,7 +287,7 @@ class DepthEstimation(MozoModelNodeBase):
     """
 
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "DepthEstimation"
 
     @property
@@ -329,7 +329,7 @@ class DepthEstimation(MozoModelNodeBase):
             print(f"{self.node_type}: Depth map generated (size: {depth_map.size})")
 
             # Set output
-            self.outputs["depth_map"] = NodeOutput(depth_map, PortType.IMAGE)
+            self.outputs["depth_map"] = ToolOutput(depth_map, PortType.IMAGE)
 
             return True
 
@@ -341,7 +341,7 @@ class DepthEstimation(MozoModelNodeBase):
 
 
 # Export available model nodes
-MODEL_NODES = [
+MODEL_TOOLS = [
     ObjectDetection,
     InstanceSegmentation,
     DepthEstimation
