@@ -219,19 +219,18 @@ class PixelFlowAnnotation(Tool):
 - `agentui/tools/model_tools.py` - ML model tools (Mozo integration)
 - `agentui/tools/cv_tools.py` - Image processing tools
 - `agentui/tools/pixelflow_tools.py` - Annotation and tracking tools
+- `agentui/cli.py` - Command-line interface with subcommands
 - `ui/src/App.svelte` - Main UI orchestrator
 - `ui/src/lib/utils.js` - Shared UI utilities
 - `ui/vite.config.js` - Builds to `../agentui/static/`
-- `pixelflow.md` - External pixelflow library integration guide
-- `mozo.md` - Model serving library integration guide
 
 ### Recent Improvements
+- **Modern CLI**: Professional command-line interface with subcommands (`agentui start`, `agentui info`, etc.)
 - **Model Tool System**: Integrated Mozo library for universal model serving with lazy loading
 - **DETECTIONS Port Type**: New dedicated port type for PixelFlow Detections objects
 - **Detectron2 Support**: Object detection and instance segmentation via Mozo
 - **Depth Estimation**: Monocular depth estimation using Depth Anything models
 - **UI Cleanup**: Removed inline styles, consolidated CSS, created shared utilities
-- **Placeholder Tools**: Better initial user experience with guided tool placement
 - **Terminal Tool Focus**: Results only from workflow endpoints
 - **Type Safety**: Enhanced port type validation and visual indicators
 

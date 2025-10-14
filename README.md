@@ -90,19 +90,19 @@ for tool_id, result in results.items():
 
 ```python
 from agentui.core.workflow import Workflow
-from agentui.core.node import Connection
-from agentui.nodes.base_nodes import MediaInputNode, ResizeNode, SaveImageNode
+from agentui.core.tool import Connection
+from agentui.tools.base_tools import MediaInputTool, ResizeTool, SaveImageTool
 
 # Create tools
-input_tool = MediaInputNode(path='input.jpg')
-resize_tool = ResizeNode(width=800, height=600)
-save_tool = SaveImageNode(path='output.jpg')
+input_tool = MediaInputTool(path='input.jpg')
+resize_tool = ResizeTool(width=800, height=600)
+save_tool = SaveImageTool(path='output.jpg')
 
 # Build workflow
 workflow = Workflow()
-workflow.add_node(input_tool)
-workflow.add_node(resize_tool)
-workflow.add_node(save_tool)
+workflow.add_tool(input_tool)
+workflow.add_tool(resize_tool)
+workflow.add_tool(save_tool)
 
 # Connect tools
 workflow.add_connection(Connection(input_tool.id, "image", resize_tool.id, "image"))
@@ -138,14 +138,14 @@ npm run build  # Builds to ../agentui/static/
 
 ### Adding Custom Tools
 
-Tools are Python classes that inherit from `Node`:
+Tools are Python classes that inherit from `Tool`:
 
 ```python
-from agentui.core.node import Node, NodeOutput, Port, PortType
+from agentui.core.tool import Tool, ToolOutput, Port, PortType
 
-class MyCustomTool(Node):
+class MyCustomTool(Tool):
     @property
-    def node_type(self) -> str:
+    def tool_type(self) -> str:
         return "MyCustomTool"
 
     @property
@@ -159,7 +159,7 @@ class MyCustomTool(Node):
     def process(self) -> bool:
         image = self.inputs["image"].data
         # Do something with the image
-        self.outputs["image"] = NodeOutput(processed_image, PortType.IMAGE)
+        self.outputs["image"] = ToolOutput(processed_image, PortType.IMAGE)
         return True
 ```
 
@@ -198,8 +198,6 @@ Future additions will focus on:
 ## Documentation
 
 - **[CLAUDE.md](CLAUDE.md)**: Complete developer guide and architecture documentation
-- **[INSTALLATION.md](INSTALLATION.md)**: Detailed installation and troubleshooting
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System design and component details
 
 ## Requirements
 
