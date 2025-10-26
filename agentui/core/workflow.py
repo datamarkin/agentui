@@ -84,7 +84,15 @@ class Workflow:
                 success = tool.process()
 
             if not success:
-                raise RuntimeError(f"Tool {tool_id} ({tool.tool_type}) failed to execute")
+                # Provide detailed error message to help with debugging
+                error_msg = f"Tool '{tool.tool_type}' (ID: {tool_id}) failed to execute.\n"
+                error_msg += f"Check server console for detailed error messages."
+
+                # Check for missing inputs
+                if not tool.inputs:
+                    error_msg += f"\nPossible cause: Tool has no inputs - check if previous tools completed successfully."
+
+                raise RuntimeError(error_msg)
 
             all_results[tool_id] = {
                 'type': tool.tool_type,
