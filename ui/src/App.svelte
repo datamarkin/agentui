@@ -11,8 +11,8 @@
     import { generateNodeClasses } from './lib/utils.js';
     import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection } from './lib/stores.js';
 
-    // Initialize with MediaInput node
-    let nodes = writable([{
+    // Factory function for MediaInput node (single source of truth)
+    const createMediaInputNode = () => ({
         id: 'MediaInput-initial',
         type: 'default',
         position: { x: 100, y: 100 },
@@ -23,7 +23,10 @@
         },
         class: 'node-category-input',
         deletable: false
-    }]);
+    });
+
+    // Initialize with MediaInput node
+    let nodes = writable([createMediaInputNode()]);
     let edges = writable([]);
     let selectedNode = writable(null);
     let availableNodes = writable([]);
@@ -58,19 +61,7 @@
     function initializeCanvas() {
         console.log('initializeCanvas called');
         // Reset to MediaInput node
-        const mediaInputNode = {
-            id: 'MediaInput-initial',
-            type: 'default',
-            position: { x: 100, y: 100 },
-            data: {
-                label: 'Media Input',
-                nodeType: 'MediaInput',
-                parameters: {}
-            },
-            class: 'node-category-input',
-            deletable: false
-        };
-        nodes.set([mediaInputNode]);
+        nodes.set([createMediaInputNode()]);
         edges.set([]);
         console.log('Canvas initialized with MediaInput node');
     }
