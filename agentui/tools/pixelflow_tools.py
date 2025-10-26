@@ -25,8 +25,8 @@ except ImportError:
 class PixelFlowToolBase(Tool):
     """Base class for nodes using the external pixelflow library"""
 
-    def __init__(self, node_id: Optional[str] = None, **kwargs):
-        super().__init__(node_id, **kwargs)
+    def __init__(self, tool_id: Optional[str] = None, **kwargs):
+        super().__init__(tool_id, **kwargs)
         if not PIXELFLOW_AVAILABLE:
             raise ImportError("PixelFlow nodes require the pixelflow library. Install with: pip install pixelflow")
 
@@ -406,12 +406,152 @@ class DrawPolygons(PixelFlowToolBase):
             return False
 
 
+class DrawKeypoints(PixelFlowToolBase):
+    """Draw keypoint markers on detected objects"""
+
+    @property
+    def tool_type(self) -> str:
+        return "DrawKeypoints"
+
+    @property
+    def category(self) -> str:
+        return "Annotation"
+
+    @property
+    def description(self) -> str:
+        return "Draw colored circles on keypoint locations"
+
+    @property
+    def input_ports(self) -> Dict[str, Port]:
+        return {
+            "image": Port("image", PortType.IMAGE, "Input image"),
+            "detections": Port("detections", PortType.DETECTIONS, "Detections with keypoints")
+        }
+
+    @property
+    def output_ports(self) -> Dict[str, Port]:
+        return {
+            "annotated_image": Port("annotated_image", PortType.IMAGE, "Image with keypoints")
+        }
+
+    def process(self) -> bool:
+        try:
+            if "image" not in self.inputs or "detections" not in self.inputs:
+                return False
+
+            image = self.inputs["image"].data
+            detections = self.inputs["detections"].data
+
+            # Convert PIL Image to numpy array if needed
+            if isinstance(image, Image.Image):
+                image = np.array(image)
+
+            # Draw keypoints using pixelflow
+            annotated = pixelflow.annotate.keypoint(
+                image=image,
+                detections=detections,
+                radius=self.parameters.get("radius", None),
+                thickness=self.parameters.get("thickness", None),
+                show_names=self.parameters.get("show_names", False)
+            )
+
+            # Convert back to PIL Image if needed
+            if isinstance(annotated, np.ndarray):
+                annotated = Image.fromarray(annotated)
+
+            self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
+            return True
+
+        except Exception as e:
+            print(f"DrawKeypoints error: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+
+class DrawKeypointSkeleton(PixelFlowToolBase):
+    """Draw skeleton connections between keypoints"""
+
+    @property
+    def tool_type(self) -> str:
+        return "DrawKeypointSkeleton"
+
+    @property
+    def category(self) -> str:
+        return "Annotation"
+
+    @property
+    def description(self) -> str:
+        return "Draw lines connecting related keypoints"
+
+    @property
+    def input_ports(self) -> Dict[str, Port]:
+        return {
+            "image": Port("image", PortType.IMAGE, "Input image"),
+            "detections": Port("detections", PortType.DETECTIONS, "Detections with keypoints")
+        }
+
+    @property
+    def output_ports(self) -> Dict[str, Port]:
+        return {
+            "annotated_image": Port("annotated_image", PortType.IMAGE, "Image with skeleton")
+        }
+
+    def process(self) -> bool:
+        try:
+            if "image" not in self.inputs or "detections" not in self.inputs:
+                return False
+
+            image = self.inputs["image"].data
+            detections = self.inputs["detections"].data
+
+            # Convert PIL Image to numpy array if needed
+            if isinstance(image, Image.Image):
+                image = np.array(image)
+
+            # Parse custom connections if provided
+            connections = None
+            skeleton_type = self.parameters.get("skeleton_type", "coco")
+
+            if skeleton_type == "custom":
+                custom_connections_str = self.parameters.get("custom_connections", "")
+                if custom_connections_str:
+                    # Parse format: "nose-left_eye,left_eye-left_ear"
+                    connections = []
+                    for pair in custom_connections_str.split(","):
+                        pair = pair.strip()
+                        if "-" in pair:
+                            start, end = pair.split("-", 1)
+                            connections.append((start.strip(), end.strip()))
+
+            # Draw skeleton using pixelflow
+            annotated = pixelflow.annotate.keypoint_skeleton(
+                image=image,
+                detections=detections,
+                connections=connections,  # None = COCO default
+                thickness=self.parameters.get("thickness", None)
+            )
+
+            # Convert back to PIL Image if needed
+            if isinstance(annotated, np.ndarray):
+                annotated = Image.fromarray(annotated)
+
+            self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
+            return True
+
+        except Exception as e:
+            print(f"DrawKeypointSkeleton error: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+
 # Tracking Node
 class ObjectTracker(PixelFlowToolBase):
     """Track objects across frames using pixelflow"""
 
-    def __init__(self, node_id: Optional[str] = None, **kwargs):
-        super().__init__(node_id, **kwargs)
+    def __init__(self, tool_id: Optional[str] = None, **kwargs):
+        super().__init__(tool_id, **kwargs)
         self.tracker = None
 
     @property
@@ -474,8 +614,8 @@ class ObjectTracker(PixelFlowToolBase):
 class ZoneAnalyzer(PixelFlowToolBase):
     """Analyze object presence in defined zones using pixelflow"""
 
-    def __init__(self, node_id: Optional[str] = None, **kwargs):
-        super().__init__(node_id, **kwargs)
+    def __init__(self, tool_id: Optional[str] = None, **kwargs):
+        super().__init__(tool_id, **kwargs)
         self.zones = None
 
     @property
@@ -553,6 +693,8 @@ PIXELFLOW_TOOLS = [
     PixelateRegions,
     DrawMasks,
     DrawPolygons,
+    DrawKeypoints,
+    DrawKeypointSkeleton,
     ObjectTracker,
     ZoneAnalyzer
 ] if PIXELFLOW_AVAILABLE else []
