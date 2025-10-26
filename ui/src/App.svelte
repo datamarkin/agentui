@@ -21,7 +21,8 @@
             nodeType: 'MediaInput',
             parameters: {}
         },
-        class: 'node-category-input'
+        class: 'node-category-input',
+        deletable: false
     }]);
     let edges = writable([]);
     let selectedNode = writable(null);
@@ -66,7 +67,8 @@
                 nodeType: 'MediaInput',
                 parameters: {}
             },
-            class: 'node-category-input'
+            class: 'node-category-input',
+            deletable: false
         };
         nodes.set([mediaInputNode]);
         edges.set([]);
