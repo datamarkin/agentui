@@ -27,19 +27,35 @@ class MediaInputTool(InputTool):
             image_path = self.parameters.get('path')
             image_data = self.parameters.get('data')  # base64 encoded image
 
-            if image_path and os.path.exists(image_path):
-                image = Image.open(image_path).convert('RGB')
-            elif image_data:
-                # Decode base64 image
-                image_bytes = base64.b64decode(image_data)
-                image = Image.open(BytesIO(image_bytes)).convert('RGB')
-            else:
+            # Better error messages for debugging
+            if not image_path and not image_data:
+                print(f"MediaInput error: No image path or data provided. Please upload an image or set a file path.")
                 return False
+
+            if image_path:
+                if not os.path.exists(image_path):
+                    print(f"MediaInput error: File not found: {image_path}")
+                    return False
+                try:
+                    image = Image.open(image_path).convert('RGB')
+                except Exception as e:
+                    print(f"MediaInput error: Failed to open image file '{image_path}': {e}")
+                    return False
+            elif image_data:
+                try:
+                    # Decode base64 image
+                    image_bytes = base64.b64decode(image_data)
+                    image = Image.open(BytesIO(image_bytes)).convert('RGB')
+                except Exception as e:
+                    print(f"MediaInput error: Failed to decode base64 image data: {e}")
+                    return False
 
             self.outputs["image"] = ToolOutput(image, PortType.IMAGE)
             return True
         except Exception as e:
-            print(f"MediaInput error: {e}")
+            print(f"MediaInput error: Unexpected error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 
@@ -176,38 +192,6 @@ class SaveImageTool(Tool):
             return True
         except Exception as e:
             print(f"SaveImage error: {e}")
-            return False
-
-
-class ImageToBase64Tool(Tool):
-    """Convert image to base64 string for web display"""
-
-    @property
-    def tool_type(self) -> str:
-        return "ImageToBase64"
-
-    @property
-    def input_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Input image")}
-
-    @property
-    def output_ports(self) -> Dict[str, Port]:
-        return {"base64": Port("base64", PortType.STRING, "Base64 encoded image")}
-
-    def process(self) -> bool:
-        try:
-            if "image" not in self.inputs:
-                return False
-
-            image = self.inputs["image"].data
-            buffer = BytesIO()
-            image.save(buffer, format='JPEG')
-            img_str = base64.b64encode(buffer.getvalue()).decode()
-
-            self.outputs["base64"] = ToolOutput(f"data:image/jpeg;base64,{img_str}", PortType.STRING)
-            return True
-        except Exception as e:
-            print(f"ImageToBase64 error: {e}")
             return False
 
 
