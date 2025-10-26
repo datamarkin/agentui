@@ -44,8 +44,8 @@ class MozoModelToolBase(Tool):
     # Shared ModelManager instance across all model nodes
     _model_manager: Optional[ModelManager] = None
 
-    def __init__(self, node_id: Optional[str] = None, **kwargs):
-        super().__init__(node_id, **kwargs)
+    def __init__(self, tool_id: Optional[str] = None, **kwargs):
+        super().__init__(tool_id, **kwargs)
 
         if not MOZO_AVAILABLE:
             raise ImportError(
@@ -150,7 +150,7 @@ class ObjectDetection(MozoModelToolBase):
         try:
             # Get input image
             if "image" not in self.inputs:
-                print(f"{self.node_type}: No input image")
+                print(f"{self.tool_type}: No input image")
                 return False
 
             pil_image = self.inputs["image"].data
@@ -165,18 +165,18 @@ class ObjectDetection(MozoModelToolBase):
             cv2_image = self.pil_to_cv2(pil_image)
 
             # Get model from Mozo (lazy loads if needed)
-            print(f"{self.node_type}: Loading model '{framework}/{model_variant}' on {device}...")
+            print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
             model = self.model_manager.get_model(framework, model_variant)
 
             # Run prediction - returns PixelFlow Detections
-            print(f"{self.node_type}: Running inference...")
+            print(f"{self.tool_type}: Running inference...")
             detections = model.predict(cv2_image)
 
             # Filter by confidence threshold
             if confidence_threshold > 0.0:
                 detections = detections.filter_by_confidence(confidence_threshold)
 
-            print(f"{self.node_type}: Found {len(detections)} detections")
+            print(f"{self.tool_type}: Found {len(detections)} detections")
 
             # Set outputs
             # Note: We output the PixelFlow Detections object directly
@@ -186,7 +186,7 @@ class ObjectDetection(MozoModelToolBase):
             return True
 
         except Exception as e:
-            print(f"{self.node_type} error: {e}")
+            print(f"{self.tool_type} error: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -230,7 +230,7 @@ class InstanceSegmentation(MozoModelToolBase):
         try:
             # Get input image
             if "image" not in self.inputs:
-                print(f"{self.node_type}: No input image")
+                print(f"{self.tool_type}: No input image")
                 return False
 
             pil_image = self.inputs["image"].data
@@ -245,11 +245,11 @@ class InstanceSegmentation(MozoModelToolBase):
             cv2_image = self.pil_to_cv2(pil_image)
 
             # Get model from Mozo
-            print(f"{self.node_type}: Loading model '{framework}/{model_variant}' on {device}...")
+            print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
             model = self.model_manager.get_model(framework, model_variant)
 
             # Run prediction
-            print(f"{self.node_type}: Running inference...")
+            print(f"{self.tool_type}: Running inference...")
             detections = model.predict(cv2_image)
 
             # Filter by confidence
@@ -258,7 +258,7 @@ class InstanceSegmentation(MozoModelToolBase):
 
             # Count detections with masks
             mask_count = sum(1 for det in detections if det.masks)
-            print(f"{self.node_type}: Found {len(detections)} detections ({mask_count} with masks)")
+            print(f"{self.tool_type}: Found {len(detections)} detections ({mask_count} with masks)")
 
             # Set outputs
             self.outputs["detections"] = ToolOutput(detections, PortType.DETECTIONS)
@@ -266,7 +266,7 @@ class InstanceSegmentation(MozoModelToolBase):
             return True
 
         except Exception as e:
-            print(f"{self.node_type} error: {e}")
+            print(f"{self.tool_type} error: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -306,7 +306,7 @@ class DepthEstimation(MozoModelToolBase):
         try:
             # Get input image
             if "image" not in self.inputs:
-                print(f"{self.node_type}: No input image")
+                print(f"{self.tool_type}: No input image")
                 return False
 
             pil_image = self.inputs["image"].data
@@ -319,14 +319,14 @@ class DepthEstimation(MozoModelToolBase):
             cv2_image = self.pil_to_cv2(pil_image)
 
             # Get model from Mozo
-            print(f"{self.node_type}: Loading model 'depth_anything/{model_variant}' on {device}...")
+            print(f"{self.tool_type}: Loading model 'depth_anything/{model_variant}' on {device}...")
             model = self.model_manager.get_model('depth_anything', model_variant)
 
             # Run prediction - returns PIL Image (depth map)
-            print(f"{self.node_type}: Running inference...")
+            print(f"{self.tool_type}: Running inference...")
             depth_map = model.predict(cv2_image)
 
-            print(f"{self.node_type}: Depth map generated (size: {depth_map.size})")
+            print(f"{self.tool_type}: Depth map generated (size: {depth_map.size})")
 
             # Set output
             self.outputs["depth_map"] = ToolOutput(depth_map, PortType.IMAGE)
@@ -334,7 +334,87 @@ class DepthEstimation(MozoModelToolBase):
             return True
 
         except Exception as e:
-            print(f"{self.node_type} error: {e}")
+            print(f"{self.tool_type} error: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+
+class DatamarkinDetection(MozoModelToolBase):
+    """
+    Datamarkin Cloud Detection - Use your custom trained models via API.
+
+    Supports:
+    - Custom object detection models
+    - Keypoint detection models
+    - Instance segmentation models
+
+    No local model loading - all inference happens via Datamarkin cloud service.
+    Requires a training_id and optional bearer_token for authentication.
+
+    Output format: PixelFlow Detections (unified format for all frameworks)
+    """
+
+    @property
+    def tool_type(self) -> str:
+        return "DatamarkinDetection"
+
+    @property
+    def input_ports(self) -> Dict[str, Port]:
+        return {
+            "image": Port("image", PortType.IMAGE, "Input image (PIL Image)")
+        }
+
+    @property
+    def output_ports(self) -> Dict[str, Port]:
+        return {
+            "detections": Port("detections", PortType.DETECTIONS, "Detected objects (PixelFlow Detections)")
+        }
+
+    def process(self) -> bool:
+        try:
+            # Get input image
+            if "image" not in self.inputs:
+                print(f"{self.tool_type}: No input image")
+                return False
+
+            pil_image = self.inputs["image"].data
+
+            # Get essential parameters only
+            training_id = self.parameters.get('training_id', '')
+            bearer_token = self.parameters.get('bearer_token', None)
+
+            # Validate training_id
+            if not training_id:
+                print(f"{self.tool_type}: No training_id provided. Please enter your Datamarkin model ID.")
+                return False
+
+            # Convert PIL to OpenCV format
+            cv2_image = self.pil_to_cv2(pil_image)
+
+            # Get model from Mozo (Mozo handles base_url and timeout)
+            print(f"{self.tool_type}: Connecting to Datamarkin API...")
+            print(f"  Training ID: {training_id}")
+
+            model = self.model_manager.get_model(
+                'datamarkin',
+                training_id,
+                bearer_token=bearer_token
+            )
+
+            # Run cloud inference - return all detections (no filtering)
+            print(f"{self.tool_type}: Running cloud inference...")
+            detections = model.predict(cv2_image)
+
+            print(f"{self.tool_type}: Found {len(detections)} detections")
+
+            # Set outputs (all detections, no filtering)
+            self.outputs["detections"] = ToolOutput(detections, PortType.DETECTIONS)
+
+            return True
+
+        except Exception as e:
+            print(f"{self.tool_type} error: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -344,5 +424,6 @@ class DepthEstimation(MozoModelToolBase):
 MODEL_TOOLS = [
     ObjectDetection,
     InstanceSegmentation,
-    DepthEstimation
+    DepthEstimation,
+    DatamarkinDetection
 ] if MOZO_AVAILABLE and PIXELFLOW_AVAILABLE else []
