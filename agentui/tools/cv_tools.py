@@ -347,54 +347,9 @@ class QualityAnalysisTool(Tool):
             return False
 
 
-# Placeholder detection node (would require ML model)
-class ObjectDetectTool(Tool):
-    """Detect objects in image using YOLO (placeholder)"""
-
-    @property
-    def tool_type(self) -> str:
-        return "ObjectDetect"
-
-    @property
-    def input_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Input image")}
-
-    @property
-    def output_ports(self) -> Dict[str, Port]:
-        return {"detections": Port("detections", PortType.JSON, "Detection results")}
-
-    def process(self) -> bool:
-        try:
-            if "image" not in self.inputs:
-                return False
-
-            image = self.inputs["image"].data
-
-            # Placeholder detection results
-            # In real implementation, this would use YOLO or other model
-            detections = [
-                {
-                    "class": "person",
-                    "confidence": 0.85,
-                    "bbox": [100, 100, 200, 300]  # x, y, width, height
-                },
-                {
-                    "class": "car",
-                    "confidence": 0.92,
-                    "bbox": [300, 150, 150, 100]
-                }
-            ]
-
-            self.outputs["detections"] = ToolOutput(detections, PortType.JSON)
-            return True
-        except Exception as e:
-            print(f"ObjectDetect error: {e}")
-            return False
-
-
 # Combiner nodes
 class VisualizeDetectionsTool(Tool):
-    """Draw detection boxes on image"""
+    """Draw detection boxes on image (PixelFlow Detections only)"""
 
     @property
     def tool_type(self) -> str:
@@ -404,7 +359,7 @@ class VisualizeDetectionsTool(Tool):
     def input_ports(self) -> Dict[str, Port]:
         return {
             "image": Port("image", PortType.IMAGE, "Input image"),
-            "detections": Port("detections", PortType.JSON, "Detection results")
+            "detections": Port("detections", PortType.DETECTIONS, "Detection results (PixelFlow Detections)")
         }
 
     @property
@@ -421,24 +376,29 @@ class VisualizeDetectionsTool(Tool):
 
             draw = ImageDraw.Draw(image)
 
+            # Draw each detection
             for detection in detections:
-                bbox = detection.get("bbox", [0, 0, 0, 0])
-                class_name = detection.get("class", "unknown")
-                confidence = detection.get("confidence", 0.0)
+                if not hasattr(detection, 'bbox'):
+                    continue
 
-                x, y, w, h = bbox
+                # PixelFlow format: detection.bbox is [x1, y1, x2, y2]
+                x1, y1, x2, y2 = detection.bbox
+                class_name = detection.class_name if hasattr(detection, 'class_name') else "unknown"
+                confidence = detection.confidence if hasattr(detection, 'confidence') else 0.0
 
                 # Draw bounding box
-                draw.rectangle([x, y, x + w, y + h], outline="red", width=2)
+                draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
 
                 # Draw label
                 label = f"{class_name}: {confidence:.2f}"
-                draw.text((x, y - 20), label, fill="red")
+                draw.text((x1, y1 - 20), label, fill="red")
 
             self.outputs["image"] = ToolOutput(image, PortType.IMAGE)
             return True
         except Exception as e:
             print(f"VisualizeDetections error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 
