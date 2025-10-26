@@ -5,8 +5,7 @@ from ..tools.base_tools import (
     ResizeTool,
     BlurTool,
     ConvertFormatTool,
-    SaveImageTool,
-    ImageToBase64Tool
+    SaveImageTool
 )
 from ..tools.cv_tools import (
     RotateTool,
@@ -18,7 +17,6 @@ from ..tools.cv_tools import (
     EdgeDetectTool,
     DominantColorTool,
     QualityAnalysisTool,
-    ObjectDetectTool,
     VisualizeDetectionsTool,
     BlendImagesTool
 )
@@ -39,6 +37,14 @@ except ImportError:
     MODEL_TOOLS = []
     MODEL_TOOLS_AVAILABLE = False
 
+# Import transform tools if available
+try:
+    from ..tools.transform_tools import TRANSFORM_TOOLS
+    TRANSFORM_TOOLS_AVAILABLE = True
+except ImportError:
+    TRANSFORM_TOOLS = []
+    TRANSFORM_TOOLS_AVAILABLE = False
+
 
 class ToolRegistry:
     """Registry for all available tool types"""
@@ -52,7 +58,6 @@ class ToolRegistry:
         # Input/Output tools
         self.register(MediaInputTool)
         self.register(SaveImageTool)
-        self.register(ImageToBase64Tool)
 
         # Basic processing
         self.register(ResizeTool)
@@ -76,8 +81,8 @@ class ToolRegistry:
         self.register(DominantColorTool)
         self.register(QualityAnalysisTool)
 
-        # Detection (placeholder)
-        self.register(ObjectDetectTool)
+        # Detection (placeholder) - REMOVED: Use ObjectDetection (Mozo-based) instead
+        # self.register(ObjectDetectTool)  # This was a placeholder with fake data
 
         # Combiners
         self.register(VisualizeDetectionsTool)
@@ -91,6 +96,11 @@ class ToolRegistry:
         # Model tools (if available)
         if MODEL_TOOLS_AVAILABLE:
             for tool_class in MODEL_TOOLS:
+                self.register(tool_class)
+
+        # Transform tools (if available)
+        if TRANSFORM_TOOLS_AVAILABLE:
+            for tool_class in TRANSFORM_TOOLS:
                 self.register(tool_class)
 
     def register(self, tool_class: Type[Tool]):
@@ -165,15 +175,6 @@ class ToolRegistry:
                         {'value': 'BMP', 'label': 'BMP'}
                     ]
                 }
-            }
-        },
-        'ImageToBase64': {
-            'name': 'Image To Base64',
-            'category': 'Input/Output',
-            'description': 'Convert image to base64 string',
-            'parameters': {
-                'format': 'JPEG',
-                'quality': 85
             }
         },
 
@@ -368,36 +369,11 @@ class ToolRegistry:
             }
         },
 
-        # Detection
-        'ObjectDetect': {
-            'name': 'Object Detect',
-            'category': 'Detection',
-            'description': 'Detect objects in image',
-            'parameters': {
-                'model': 'yolo',
-                'confidence_threshold': 0.5,
-                'nms_threshold': 0.4,
-                'max_detections': 100
-            },
-            'parameter_options': {
-                'model': {
-                    'type': 'select',
-                    'options': [
-                        {'value': 'yolo', 'label': 'YOLO v5'},
-                        {'value': 'ssd', 'label': 'SSD MobileNet'},
-                        {'value': 'rcnn', 'label': 'R-CNN'},
-                        {'value': 'yolo8', 'label': 'YOLO v8'},
-                        {'value': 'detectron2', 'label': 'Detectron2'}
-                    ]
-                }
-            }
-        },
-
         # Combine
         'VisualizeDetections': {
             'name': 'Visualize Detections',
             'category': 'Combine',
-            'description': 'Overlay detection results on image',
+            'description': 'Overlay detection results on image (supports PixelFlow Detections)',
             'required_inputs': ['image', 'detections'],
             'optional_inputs': [],
             'parameters': {
@@ -500,6 +476,36 @@ class ToolRegistry:
                 'thickness': 2,
                 'color': [0, 255, 0],
                 'filled': False
+            }
+        },
+        'DrawKeypoints': {
+            'name': 'Draw Keypoints',
+            'category': 'Annotation',
+            'description': 'Draw colored circles on keypoint locations',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'radius': None,
+                'thickness': None,
+                'show_names': False
+            }
+        },
+        'DrawKeypointSkeleton': {
+            'name': 'Draw Keypoint Skeleton',
+            'category': 'Annotation',
+            'description': 'Draw lines connecting related keypoints (COCO skeleton by default)',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'thickness': None,
+                'skeleton_type': 'coco',
+                'custom_connections': ''
+            },
+            'parameter_options': {
+                'skeleton_type': [
+                    {'value': 'coco', 'label': 'COCO (Human Pose)'},
+                    {'value': 'custom', 'label': 'Custom Connections'}
+                ]
             }
         },
         'ObjectTracker': {
@@ -639,6 +645,261 @@ class ToolRegistry:
                         {'value': 'cpu', 'label': 'CPU'},
                         {'value': 'cuda', 'label': 'CUDA (GPU)'},
                         {'value': 'mps', 'label': 'MPS (Apple Silicon)'}
+                    ]
+                }
+            }
+        },
+        'DatamarkinDetection': {
+            'name': 'Datamarkin Detection',
+            'category': 'Models',
+            'description': 'Cloud-based inference using your custom Datamarkin models (keypoints, detection, segmentation)',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'training_id': '',
+                'bearer_token': ''
+            }
+        },
+
+        # Transform tools (pixelflow.transform integration)
+        'RotateImage': {
+            'name': 'Rotate Image',
+            'category': 'Transform',
+            'description': 'Rotate image by angle (counter-clockwise)',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'angle': 0,
+                'center_x': None,
+                'center_y': None,
+                'fillcolor': None
+            }
+        },
+        'FlipImage': {
+            'name': 'Flip Image',
+            'category': 'Transform',
+            'description': 'Flip image horizontally or vertically',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'direction': 'horizontal'
+            },
+            'parameter_options': {
+                'direction': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'horizontal', 'label': 'Horizontal'},
+                        {'value': 'vertical', 'label': 'Vertical'}
+                    ]
+                }
+            }
+        },
+        'CropImage': {
+            'name': 'Crop Image',
+            'category': 'Transform',
+            'description': 'Crop image to specified bounding box',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'x1': 0,
+                'y1': 0,
+                'x2': 100,
+                'y2': 100
+            }
+        },
+        'EnhanceCLAHE': {
+            'name': 'Enhance CLAHE',
+            'category': 'Enhance',
+            'description': 'Apply CLAHE contrast enhancement',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'clip_limit': 2.0,
+                'tile_size': 8
+            }
+        },
+        'AutoContrast': {
+            'name': 'Auto Contrast',
+            'category': 'Enhance',
+            'description': 'Apply automatic contrast adjustment by stretching histogram',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'cutoff': 1.0
+            }
+        },
+        'GammaCorrection': {
+            'name': 'Gamma Correction',
+            'category': 'Enhance',
+            'description': 'Apply gamma correction (<1 brightens, >1 darkens)',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'gamma': 1.0
+            }
+        },
+        'NormalizeImage': {
+            'name': 'Normalize Image',
+            'category': 'Enhance',
+            'description': 'Normalize image for neural network input',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'preset': 'imagenet',
+                'mean_r': 0.5,
+                'mean_g': 0.5,
+                'mean_b': 0.5,
+                'std_r': 0.5,
+                'std_g': 0.5,
+                'std_b': 0.5
+            },
+            'parameter_options': {
+                'preset': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'imagenet', 'label': 'ImageNet (Standard)'},
+                        {'value': 'custom', 'label': 'Custom'}
+                    ]
+                }
+            }
+        },
+        'RotateWithDetections': {
+            'name': 'Rotate With Detections',
+            'category': 'Transform',
+            'description': 'Rotate image and detections together (modifies detections in-place)',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'angle': 0,
+                'center_x': None,
+                'center_y': None,
+                'fillcolor': None,
+                'track_metadata': True
+            }
+        },
+        'FlipWithDetections': {
+            'name': 'Flip With Detections',
+            'category': 'Transform',
+            'description': 'Flip image and detections together (modifies detections in-place)',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'direction': 'horizontal',
+                'track_metadata': True
+            },
+            'parameter_options': {
+                'direction': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'horizontal', 'label': 'Horizontal'},
+                        {'value': 'vertical', 'label': 'Vertical'}
+                    ]
+                }
+            }
+        },
+        'CropWithDetections': {
+            'name': 'Crop With Detections',
+            'category': 'Transform',
+            'description': 'Crop image and filter detections to crop region',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'x1': 0,
+                'y1': 0,
+                'x2': 100,
+                'y2': 100,
+                'track_metadata': True
+            }
+        },
+        'CropAroundDetections': {
+            'name': 'Crop Around Detections',
+            'category': 'Detection',
+            'description': 'Extract cropped images around each detection bbox',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'padding_mode': 'uniform',
+                'padding': 0.0,
+                'padding_left': 0.0,
+                'padding_right': 0.0,
+                'padding_top': 0.0,
+                'padding_bottom': 0.0
+            },
+            'parameter_options': {
+                'padding_mode': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'uniform', 'label': 'Uniform Padding'},
+                        {'value': 'custom', 'label': 'Custom Per Side'}
+                    ]
+                }
+            }
+        },
+        'AlignDetections': {
+            'name': 'Align Detections',
+            'category': 'Detection',
+            'description': 'Rotate image so two keypoints form specified angle',
+            'required_inputs': ['image', 'detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'point1_name': 'p0',
+                'point2_name': 'p9',
+                'target_angle': 0.0,
+                'detection_index': 0
+            }
+        },
+        'UpdateBBoxFromKeypoints': {
+            'name': 'Update BBox From Keypoints',
+            'category': 'Detection',
+            'description': 'Update detection bboxes based on keypoint positions',
+            'required_inputs': ['detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'keypoint_mode': 'all',
+                'keypoint_names': '',
+                'track_metadata': True
+            },
+            'parameter_options': {
+                'keypoint_mode': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'all', 'label': 'All Keypoints'},
+                        {'value': 'custom', 'label': 'Custom List'}
+                    ]
+                }
+            }
+        },
+        'AddPadding': {
+            'name': 'Add Padding',
+            'category': 'Detection',
+            'description': 'Add padding to all detection bounding boxes',
+            'required_inputs': ['detections'],
+            'optional_inputs': [],
+            'parameters': {
+                'padding_mode': 'uniform',
+                'padding': 0.1,
+                'padding_left': 0.1,
+                'padding_right': 0.1,
+                'padding_top': 0.1,
+                'padding_bottom': 0.1,
+                'reference': 'shorter',
+                'track_metadata': True
+            },
+            'parameter_options': {
+                'padding_mode': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'uniform', 'label': 'Uniform Padding'},
+                        {'value': 'custom', 'label': 'Custom Per Side'}
+                    ]
+                },
+                'reference': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'shorter', 'label': 'Shorter Side'},
+                        {'value': 'longer', 'label': 'Longer Side'},
+                        {'value': 'width', 'label': 'Width'},
+                        {'value': 'height', 'label': 'Height'}
                     ]
                 }
             }
