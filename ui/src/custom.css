@@ -67,13 +67,57 @@
     /*stroke-dasharray: 5, 5;  !* Optional: dashed line *!*/
 }
 
-div[data-handleid="image"], div[data-handleid="annotated_image"], div[data-handleid="depth_map"], div[data-handleid="labeled_image"], div[data-handleid="blurred_image"] {
-    background: #ffb3ba;
+/* ============================================================================
+   Port Type Colors - Semantic Styling System
+   ============================================================================
+
+   Handles are automatically styled based on their PortType (defined in tool.py).
+
+   How it works:
+   1. Each tool defines input/output ports with a PortType enum value
+   2. The registry sends port type info to the UI via get_tool_info()
+   3. CustomNode.svelte adds "port-type-{type}" class to each handle
+   4. CSS rules below apply colors based on the class
+
+   Benefits:
+   - Automatic: New ports get colored without manual CSS updates
+   - Scalable: Any port named "enhanced_image" gets pink automatically
+   - Maintainable: One rule per type instead of listing all port names
+   - Visual clarity: Users instantly recognize compatible connection types
+
+   Color Palette:
+   ============================================================================ */
+
+.port-type-image {
+    background: #ffb3ba; /* Pink - all image types */
 }
 
-/*https://www.color-hex.com/color-palette/5361*/
-div[data-handleid="detections"] {
-    background: #bae1ff;
+.port-type-detections {
+    background: #bae1ff; /* Blue - PixelFlow Detections objects */
+}
+
+.port-type-string {
+    background: #ffffba; /* Yellow - text data */
+}
+
+.port-type-number {
+    background: #baffc9; /* Green - numeric values */
+}
+
+.port-type-json {
+    background: #ffdfba; /* Orange - JSON objects */
+}
+
+.port-type-array {
+    background: #e0bbff; /* Purple - arrays/lists */
+}
+
+.port-type-boolean {
+    background: #d3d3d3; /* Gray - boolean values */
+}
+
+.port-type-any {
+    background: #ffffff; /* White - accepts any type */
 }
 
 
