@@ -8,7 +8,7 @@ import argparse
 import json
 import sys
 from . import __version__
-from .core.workflow import Workflow
+from .core.workflow import WorkflowEngine
 from .core.registry import registry
 
 
@@ -76,9 +76,9 @@ def cmd_run(args):
         with open(args.workflow_file, 'r') as f:
             workflow_data = json.load(f)
 
-        # Create and execute workflow
+        # Create and execute workflow engine
         workflow_json = json.dumps(workflow_data)
-        workflow = Workflow.from_json(workflow_json, registry.get_all_types())
+        workflow = WorkflowEngine.from_json(workflow_json, registry.get_all_types())
 
         print(f"Executing workflow with {len(workflow.tools)} tools...")
         results = workflow.execute()

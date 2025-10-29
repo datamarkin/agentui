@@ -661,6 +661,115 @@ class ToolRegistry:
             }
         },
 
+        'OCRDetection': {
+            'name': 'OCR Detection',
+            'category': 'Models',
+            'description': 'Extract text from images using PaddleOCR or EasyOCR (80+ languages supported)',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'framework': 'paddleocr',
+                'variant': 'mobile',
+                'language': 'en'
+            },
+            'parameter_options': {
+                'framework': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'paddleocr', 'label': 'PaddleOCR (PP-OCRv5)'},
+                        {'value': 'easyocr', 'label': 'EasyOCR'}
+                    ]
+                },
+                'variant': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'mobile', 'label': 'Mobile (Fast)'},
+                        {'value': 'server', 'label': 'Server (Accurate)'},
+                        {'value': 'mobile-chinese', 'label': 'Mobile Chinese'},
+                        {'value': 'server-chinese', 'label': 'Server Chinese'},
+                        {'value': 'mobile-multilingual', 'label': 'Mobile Multilingual'},
+                        {'value': 'english-light', 'label': 'English Light'},
+                        {'value': 'english-full', 'label': 'English Full'},
+                        {'value': 'multilingual', 'label': 'Multilingual'},
+                        {'value': 'chinese', 'label': 'Chinese'}
+                    ]
+                }
+            }
+        },
+
+        'Florence2': {
+            'name': 'Florence-2',
+            'category': 'Models',
+            'description': 'Microsoft Florence-2 multi-task vision model (detection, captioning, OCR, segmentation)',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'task': 'detection',
+                'prompt': ''
+            },
+            'parameter_options': {
+                'task': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'detection', 'label': 'Object Detection'},
+                        {'value': 'detection_with_caption', 'label': 'Detection + Captions'},
+                        {'value': 'captioning', 'label': 'Image Captioning'},
+                        {'value': 'detailed_captioning', 'label': 'Detailed Captioning'},
+                        {'value': 'more_detailed_captioning', 'label': 'Comprehensive Captioning'},
+                        {'value': 'ocr', 'label': 'OCR (Text Extraction)'},
+                        {'value': 'ocr_with_region', 'label': 'OCR with Bounding Boxes'},
+                        {'value': 'segmentation', 'label': 'Instance Segmentation (needs prompt)'}
+                    ]
+                }
+            }
+        },
+
+        'VisualQuestionAnswering': {
+            'name': 'Visual Question Answering',
+            'category': 'Models',
+            'description': 'Answer questions about images using BLIP, Qwen2.5-VL, or Qwen3-VL vision-language models',
+            'required_inputs': ['image'],
+            'optional_inputs': [],
+            'parameters': {
+                'framework': 'blip_vqa',
+                'variant': 'base',
+                'question': 'What is in this image?'
+            },
+            'parameter_options': {
+                'framework': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'blip_vqa', 'label': 'BLIP VQA'},
+                        {'value': 'qwen2.5_vl', 'label': 'Qwen2.5-VL'},
+                        {'value': 'qwen3_vl', 'label': 'Qwen3-VL (with reasoning)'}
+                    ]
+                },
+                'variant': {
+                    'type': 'select',
+                    'options': [
+                        {'value': 'base', 'label': 'Base'},
+                        {'value': 'capfilt-large', 'label': 'CapFilt Large'},
+                        {'value': '7b-instruct', 'label': '7B Instruct'},
+                        {'value': '2b-thinking', 'label': '2B Thinking'}
+                    ]
+                }
+            }
+        },
+
+        'StabilityInpainting': {
+            'name': 'Stable Diffusion Inpainting',
+            'category': 'Models',
+            'description': 'Generate and modify image content using text prompts (requires mask image)',
+            'required_inputs': ['image', 'mask'],
+            'optional_inputs': [],
+            'parameters': {
+                'prompt': 'high quality, detailed',
+                'negative_prompt': 'lowres, bad quality',
+                'num_inference_steps': 50,
+                'guidance_scale': 7.5
+            }
+        },
+
         # Transform tools (pixelflow.transform integration)
         'RotateImage': {
             'name': 'Rotate Image',
@@ -938,6 +1047,12 @@ class ToolRegistry:
     def get_all_tool_info(self) -> Dict[str, Dict[str, any]]:
         """Get information about all tool types"""
         return {tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()}
+        # """Get information about all tool types (excludes MediaInput - always on canvas)"""
+        # return {
+        #     tool_type: self.get_tool_info(tool_type)
+        #     for tool_type in self._tools.keys()
+        #     if tool_type != 'MediaInput'  # MediaInput is locked on canvas, not in palette
+        # }
 
 
 # Global registry instance

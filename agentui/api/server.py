@@ -7,7 +7,7 @@ import base64
 import json
 import os
 
-from ..core.workflow import Workflow
+from ..core.workflow import WorkflowEngine
 from ..core.registry import registry
 
 
@@ -48,9 +48,9 @@ async def get_available_tools():
 async def execute_workflow(request: WorkflowRequest):
     """Execute a workflow from JSON definition"""
     try:
-        # Create workflow from JSON
+        # Create workflow engine from JSON
         workflow_json = json.dumps(request.workflow)
-        workflow = Workflow.from_json(workflow_json, registry.get_all_types())
+        workflow = WorkflowEngine.from_json(workflow_json, registry.get_all_types())
 
         # Execute workflow
         results = workflow.execute()
@@ -86,7 +86,7 @@ async def validate_workflow(request: WorkflowRequest):
     """Validate a workflow without executing it"""
     try:
         workflow_json = json.dumps(request.workflow)
-        workflow = Workflow.from_json(workflow_json, registry.get_all_types())
+        workflow = WorkflowEngine.from_json(workflow_json, registry.get_all_types())
 
         # Try to get execution order (this validates the DAG)
         execution_order = workflow.get_execution_order()

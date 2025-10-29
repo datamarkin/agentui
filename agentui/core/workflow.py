@@ -4,8 +4,8 @@ from collections import defaultdict, deque
 from .tool import Tool, Connection
 
 
-class Workflow:
-    """Manages and executes an agent workflow of connected tools"""
+class WorkflowEngine:
+    """Manages and executes an agent workflow of connected tools (internal execution engine)"""
 
     def __init__(self):
         self.tools: Dict[str, Tool] = {}
@@ -129,8 +129,8 @@ class Workflow:
         }, indent=2)
 
     @classmethod
-    def from_json(cls, json_str: str, tool_registry: Dict[str, type]) -> 'Workflow':
-        """Create workflow from JSON"""
+    def from_json(cls, json_str: str, tool_registry: Dict[str, type]) -> 'WorkflowEngine':
+        """Create workflow engine from JSON"""
         data = json.loads(json_str)
         workflow = cls()
 
