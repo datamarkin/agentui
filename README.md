@@ -37,10 +37,10 @@ That's it. The UI is already bundled - no separate build step needed.
 - **Depth Estimation**: Generate depth maps from single images (Depth Anything)
 
 ### Image Processing
-- **Transforms**: Resize, rotate, flip, crop images
-- **Adjustments**: Brightness, contrast, sharpening
-- **Effects**: Blur, edge detection, color analysis
-- **Blending**: Combine multiple images
+- **Transforms**: Rotate, flip, crop images with automatic detection coordinate updates
+- **Enhancement**: CLAHE enhancement, auto-contrast, gamma correction, image normalization
+- **Analysis**: Color analysis, quality metrics, dominant color extraction
+- **Blending**: Combine multiple images with alpha blending
 
 ### Annotation & Privacy
 - **Draw Detections**: Bounding boxes, labels, masks, polygons
@@ -67,50 +67,32 @@ That's it. The UI is already bundled - no separate build step needed.
 ### Programmatic Usage
 
 ```python
-from agentui.core.workflow import Workflow
-from agentui.core.registry import registry
+from agentui import Workflow
 
 # Load a workflow created in the UI
-with open('my_workflow.json') as f:
-    workflow_json = f.read()
+workflow = Workflow.load('my_workflow.json')
 
-# Execute it
-workflow = Workflow.from_json(workflow_json, registry.get_all_types())
-results = workflow.execute()
+# Run with an image
+result = workflow.run(image='test.jpg')
 
-# Access results from terminal tools (tools with no outgoing connections)
-for tool_id, result in results.items():
-    if result['is_terminal']:
-        print(f"Tool {tool_id} outputs:")
-        for output_name, output_data in result['outputs'].items():
-            print(f"  {output_name}: {type(output_data)}")
+# Access outputs
+detections = result['detections']  # PixelFlow Detections object
+print(f"Found {len(detections)} objects")
+
+# Batch processing (automatic)
+result = workflow.run(image=['img1.jpg', 'img2.jpg', 'img3.jpg'])
+for i, dets in enumerate(result['detections']):
+    print(f"Image {i}: {len(dets)} objects")
 ```
 
-### Creating Workflows in Code
+### Workflow Design Philosophy
 
-```python
-from agentui.core.workflow import Workflow
-from agentui.core.tool import Connection
-from agentui.tools.base_tools import MediaInputTool, ResizeTool, SaveImageTool
+**AgentUI is designed for visual workflow creation:**
+- Create workflows using the drag-and-drop UI
+- Export as JSON for version control
+- Load and execute programmatically with the Python API
 
-# Create tools
-input_tool = MediaInputTool(path='input.jpg')
-resize_tool = ResizeTool(width=800, height=600)
-save_tool = SaveImageTool(path='output.jpg')
-
-# Build workflow
-workflow = Workflow()
-workflow.add_tool(input_tool)
-workflow.add_tool(resize_tool)
-workflow.add_tool(save_tool)
-
-# Connect tools
-workflow.add_connection(Connection(input_tool.id, "image", resize_tool.id, "image"))
-workflow.add_connection(Connection(resize_tool.id, "image", save_tool.id, "image"))
-
-# Execute
-results = workflow.execute()
-```
+**Why not build workflows in code?** The visual interface is the fastest way to prototype CV pipelines. The Python API focuses on *execution* (loading and running workflows), not construction. This separation keeps the codebase simple and the workflow format UI-native.
 
 ## The Datamarkin Ecosystem
 
