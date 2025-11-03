@@ -2,8 +2,7 @@ import os
 import base64
 from io import BytesIO
 from typing import Dict, Any
-from PIL import Image, ImageFilter
-import numpy as np
+from PIL import Image
 
 from ..core.tool import (
     Tool, ToolOutput, Port, PortType,
@@ -56,69 +55,6 @@ class MediaInputTool(InputTool):
             print(f"MediaInput error: Unexpected error: {e}")
             import traceback
             traceback.print_exc()
-            return False
-
-
-class ResizeTool(Tool):
-    """Resize image tool"""
-
-    @property
-    def tool_type(self) -> str:
-        return "Resize"
-
-    @property
-    def input_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Input image")}
-
-    @property
-    def output_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Output image")}
-
-    def process(self) -> bool:
-        try:
-            if "image" not in self.inputs:
-                return False
-
-            image = self.inputs["image"].data
-            width = self.parameters.get('width', 800)
-            height = self.parameters.get('height', 600)
-
-            resized_image = image.resize((width, height), Image.LANCZOS)
-            self.outputs["image"] = ToolOutput(resized_image, PortType.IMAGE)
-            return True
-        except Exception as e:
-            print(f"Resize error: {e}")
-            return False
-
-
-class BlurTool(Tool):
-    """Apply blur filter to image"""
-
-    @property
-    def tool_type(self) -> str:
-        return "Blur"
-
-    @property
-    def input_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Input image")}
-
-    @property
-    def output_ports(self) -> Dict[str, Port]:
-        return {"image": Port("image", PortType.IMAGE, "Output image")}
-
-    def process(self) -> bool:
-        try:
-            if "image" not in self.inputs:
-                return False
-
-            image = self.inputs["image"].data
-            radius = self.parameters.get('radius', 2.0)
-
-            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=radius))
-            self.outputs["image"] = ToolOutput(blurred_image, PortType.IMAGE)
-            return True
-        except Exception as e:
-            print(f"Blur error: {e}")
             return False
 
 

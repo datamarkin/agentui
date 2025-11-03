@@ -2,19 +2,10 @@ from typing import Dict, List, Type
 from ..core.tool import Tool
 from ..tools.base_tools import (
     MediaInputTool,
-    ResizeTool,
-    BlurTool,
     ConvertFormatTool,
     SaveImageTool
 )
 from ..tools.cv_tools import (
-    RotateTool,
-    FlipTool,
-    CropTool,
-    BrightnessTool,
-    ContrastTool,
-    SharpenTool,
-    EdgeDetectTool,
     DominantColorTool,
     QualityAnalysisTool,
     VisualizeDetectionsTool,
@@ -60,29 +51,11 @@ class ToolRegistry:
         self.register(SaveImageTool)
 
         # Basic processing
-        self.register(ResizeTool)
-        self.register(BlurTool)
         self.register(ConvertFormatTool)
-
-        # Advanced transforms
-        self.register(RotateTool)
-        self.register(FlipTool)
-        self.register(CropTool)
-
-        # Adjustments
-        self.register(BrightnessTool)
-        self.register(ContrastTool)
-
-        # Filters
-        self.register(SharpenTool)
-        self.register(EdgeDetectTool)
 
         # Analysis
         self.register(DominantColorTool)
         self.register(QualityAnalysisTool)
-
-        # Detection (placeholder) - REMOVED: Use ObjectDetection (Mozo-based) instead
-        # self.register(ObjectDetectTool)  # This was a placeholder with fake data
 
         # Combiners
         self.register(VisualizeDetectionsTool)
@@ -178,95 +151,7 @@ class ToolRegistry:
             }
         },
 
-        # Transform
-        'Resize': {
-            'name': 'Resize',
-            'category': 'Transform',
-            'description': 'Resize image to specified dimensions',
-            'required_inputs': ['image'],
-            'optional_inputs': [],
-            'parameters': {
-                'width': 800,
-                'height': 600,
-                'maintain_aspect_ratio': True,
-                'resample_method': 'LANCZOS'
-            },
-            'parameter_options': {
-                'resample_method': {
-                    'type': 'select',
-                    'options': [
-                        {'value': 'LANCZOS', 'label': 'LANCZOS (High Quality)'},
-                        {'value': 'BILINEAR', 'label': 'BILINEAR'},
-                        {'value': 'NEAREST', 'label': 'NEAREST (Fast)'},
-                        {'value': 'BICUBIC', 'label': 'BICUBIC'}
-                    ]
-                }
-            }
-        },
-        'Rotate': {
-            'name': 'Rotate',
-            'category': 'Transform',
-            'description': 'Rotate image by angle',
-            'parameters': {
-                'angle': 0,
-                'expand': True,
-                'fill_color': '#000000',
-                'center_x': 0.5,
-                'center_y': 0.5
-            }
-        },
-        'Flip': {
-            'name': 'Flip',
-            'category': 'Transform',
-            'description': 'Flip image horizontally/vertically',
-            'parameters': {
-                'direction': 'horizontal',
-                'preserve_original': False
-            },
-            'parameter_options': {
-                'direction': {
-                    'type': 'select',
-                    'options': [
-                        {'value': 'horizontal', 'label': 'Horizontal'},
-                        {'value': 'vertical', 'label': 'Vertical'}
-                    ]
-                }
-            }
-        },
-        'Crop': {
-            'name': 'Crop',
-            'category': 'Transform',
-            'description': 'Crop image to rectangle',
-            'parameters': {
-                'x': 0,
-                'y': 0,
-                'width': 100,
-                'height': 100,
-                'use_percentage': False
-            }
-        },
-
         # Adjust
-        'Brightness': {
-            'name': 'Brightness',
-            'category': 'Adjust',
-            'description': 'Adjust image brightness',
-            'parameters': {
-                'factor': 1.0,
-                'min_factor': 0.1,
-                'max_factor': 3.0
-            }
-        },
-        'Contrast': {
-            'name': 'Contrast',
-            'category': 'Adjust',
-            'description': 'Adjust image contrast',
-            'parameters': {
-                'factor': 1.0,
-                'min_factor': 0.1,
-                'max_factor': 3.0
-            }
-        },
         'ConvertFormat': {
             'name': 'Convert Format',
             'category': 'Adjust',
@@ -284,62 +169,6 @@ class ToolRegistry:
                         {'value': 'grayscale', 'label': 'Grayscale'},
                         {'value': 'L', 'label': 'Luminance (L)'},
                         {'value': 'CMYK', 'label': 'CMYK'}
-                    ]
-                }
-            }
-        },
-
-        # Filter
-        'Blur': {
-            'name': 'Blur',
-            'category': 'Filter',
-            'description': 'Apply blur filter to image',
-            'parameters': {
-                'radius': 2.0,
-                'iterations': 1,
-                'blur_type': 'gaussian'
-            },
-            'parameter_options': {
-                'blur_type': {
-                    'type': 'select',
-                    'options': [
-                        {'value': 'gaussian', 'label': 'Gaussian'},
-                        {'value': 'box', 'label': 'Box Blur'},
-                        {'value': 'motion', 'label': 'Motion Blur'},
-                        {'value': 'radial', 'label': 'Radial Blur'}
-                    ]
-                }
-            }
-        },
-        'Sharpen': {
-            'name': 'Sharpen',
-            'category': 'Filter',
-            'description': 'Sharpen image details',
-            'parameters': {
-                'factor': 1.0,
-                'radius': 1.0,
-                'threshold': 0
-            }
-        },
-        'EdgeDetect': {
-            'name': 'Edge Detect',
-            'category': 'Filter',
-            'description': 'Detect edges in image',
-            'parameters': {
-                'method': 'canny',
-                'low_threshold': 50,
-                'high_threshold': 150,
-                'kernel_size': 3
-            },
-            'parameter_options': {
-                'method': {
-                    'type': 'select',
-                    'options': [
-                        {'value': 'canny', 'label': 'Canny'},
-                        {'value': 'sobel', 'label': 'Sobel'},
-                        {'value': 'laplacian', 'label': 'Laplacian'},
-                        {'value': 'prewitt', 'label': 'Prewitt'},
-                        {'value': 'roberts', 'label': 'Roberts Cross'}
                     ]
                 }
             }
