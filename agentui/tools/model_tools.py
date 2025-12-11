@@ -31,6 +31,25 @@ except ImportError:
     print("Warning: pixelflow library not installed. Install with: pip install pixelflow")
 
 
+def _get_training_id(tool_type: str, model_variant: str) -> Optional[str]:
+    """
+    Look up training_id from registry for a model variant.
+
+    Args:
+        tool_type: The tool type (e.g., 'ObjectDetection', 'InstanceSegmentation')
+        model_variant: The model variant value (e.g., 'yolov8n', 'faster_rcnn_R_50_FPN_3x')
+
+    Returns:
+        The training_id for Datamarkin API, or None if not found
+    """
+    from ..core.registry import TOOL_METADATA
+    options = TOOL_METADATA.get(tool_type, {}).get('parameter_options', {}).get('model_variant', {}).get('options', [])
+    for opt in options:
+        if opt.get('value') == model_variant:
+            return opt.get('training_id')
+    return None
+
+
 class MozoModelToolBase(Tool):
     """
     Base class for nodes using the Mozo model serving library.
@@ -164,9 +183,20 @@ class ObjectDetection(MozoModelToolBase):
             # Convert PIL Image to OpenCV format (BGR numpy array)
             cv2_image = self.pil_to_cv2(pil_image)
 
-            # Get model from Mozo (lazy loads if needed)
-            print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
-            model = self.model_manager.get_model(framework, model_variant)
+            # Branch based on device: API (Datamarkin) or local Mozo inference
+            if device == 'api':
+                # Use Datamarkin cloud API via Mozo
+                training_id = _get_training_id(self.tool_type, model_variant)
+                if not training_id:
+                    print(f"{self.tool_type}: No training_id found for model variant '{model_variant}'")
+                    return False
+
+                print(f"{self.tool_type}: Using Datamarkin API (training_id: {training_id})...")
+                model = self.model_manager.get_model('datamarkin', training_id)
+            else:
+                # Use local Mozo model
+                print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
+                model = self.model_manager.get_model(framework, model_variant)
 
             # Run prediction - returns PixelFlow Detections
             print(f"{self.tool_type}: Running inference...")
@@ -244,9 +274,20 @@ class InstanceSegmentation(MozoModelToolBase):
             # Convert PIL Image to OpenCV format
             cv2_image = self.pil_to_cv2(pil_image)
 
-            # Get model from Mozo
-            print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
-            model = self.model_manager.get_model(framework, model_variant)
+            # Branch based on device: API (Datamarkin) or local Mozo inference
+            if device == 'api':
+                # Use Datamarkin cloud API via Mozo
+                training_id = _get_training_id(self.tool_type, model_variant)
+                if not training_id:
+                    print(f"{self.tool_type}: No training_id found for model variant '{model_variant}'")
+                    return False
+
+                print(f"{self.tool_type}: Using Datamarkin API (training_id: {training_id})...")
+                model = self.model_manager.get_model('datamarkin', training_id)
+            else:
+                # Use local Mozo model
+                print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
+                model = self.model_manager.get_model(framework, model_variant)
 
             # Run prediction
             print(f"{self.tool_type}: Running inference...")

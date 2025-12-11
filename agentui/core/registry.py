@@ -382,16 +382,16 @@ class ToolRegistry:
                     'type': 'select',
                     'options': [
                         # Detectron2 models
-                        {'value': 'faster_rcnn_R_50_FPN_3x', 'label': 'Faster R-CNN (ResNet-50)', 'framework': 'detectron2'},
-                        {'value': 'faster_rcnn_R_101_FPN_3x', 'label': 'Faster R-CNN (ResNet-101)', 'framework': 'detectron2'},
-                        {'value': 'retinanet_R_50_FPN_3x', 'label': 'RetinaNet (ResNet-50)', 'framework': 'detectron2'},
-                        {'value': 'retinanet_R_101_FPN_3x', 'label': 'RetinaNet (ResNet-101)', 'framework': 'detectron2'},
+                        {'value': 'faster_rcnn_R_50_FPN_3x', 'label': 'Faster R-CNN (ResNet-50)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_faster_rcnn_r50'},
+                        {'value': 'faster_rcnn_R_101_FPN_3x', 'label': 'Faster R-CNN (ResNet-101)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_faster_rcnn_r101'},
+                        {'value': 'retinanet_R_50_FPN_3x', 'label': 'RetinaNet (ResNet-50)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_retinanet_r50'},
+                        {'value': 'retinanet_R_101_FPN_3x', 'label': 'RetinaNet (ResNet-101)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_retinanet_r101'},
                         # YOLOv8 models
-                        {'value': 'yolov8n', 'label': 'YOLOv8 Nano (fastest)', 'framework': 'yolov8'},
-                        {'value': 'yolov8s', 'label': 'YOLOv8 Small', 'framework': 'yolov8'},
-                        {'value': 'yolov8m', 'label': 'YOLOv8 Medium (balanced)', 'framework': 'yolov8'},
-                        {'value': 'yolov8l', 'label': 'YOLOv8 Large', 'framework': 'yolov8'},
-                        {'value': 'yolov8x', 'label': 'YOLOv8 XLarge (most accurate)', 'framework': 'yolov8'}
+                        {'value': 'yolov8n', 'label': 'YOLOv8 Nano (fastest)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8n'},
+                        {'value': 'yolov8s', 'label': 'YOLOv8 Small', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8s'},
+                        {'value': 'yolov8m', 'label': 'YOLOv8 Medium (balanced)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8m'},
+                        {'value': 'yolov8l', 'label': 'YOLOv8 Large', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8l'},
+                        {'value': 'yolov8x', 'label': 'YOLOv8 XLarge (most accurate)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8x'}
                     ]
                 },
                 'device': {
@@ -399,7 +399,8 @@ class ToolRegistry:
                     'options': [
                         {'value': 'cpu', 'label': 'CPU'},
                         {'value': 'cuda', 'label': 'CUDA (GPU)'},
-                        {'value': 'mps', 'label': 'MPS (Apple Silicon)'}
+                        {'value': 'mps', 'label': 'MPS (Apple Silicon)'},
+                        {'value': 'api', 'label': 'API (Datamarkin Cloud)'}
                     ]
                 }
             }
@@ -428,15 +429,15 @@ class ToolRegistry:
                     'type': 'select',
                     'options': [
                         # Detectron2 models
-                        {'value': 'mask_rcnn_R_50_FPN_3x', 'label': 'Mask R-CNN (ResNet-50)', 'framework': 'detectron2'},
-                        {'value': 'mask_rcnn_R_101_FPN_3x', 'label': 'Mask R-CNN (ResNet-101)', 'framework': 'detectron2'},
-                        {'value': 'mask_rcnn_X_101_32x8d_FPN_3x', 'label': 'Mask R-CNN (ResNeXt-101)', 'framework': 'detectron2'},
+                        {'value': 'mask_rcnn_R_50_FPN_3x', 'label': 'Mask R-CNN (ResNet-50)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_mask_rcnn_r50'},
+                        {'value': 'mask_rcnn_R_101_FPN_3x', 'label': 'Mask R-CNN (ResNet-101)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_mask_rcnn_r101'},
+                        {'value': 'mask_rcnn_X_101_32x8d_FPN_3x', 'label': 'Mask R-CNN (ResNeXt-101)', 'framework': 'detectron2', 'training_id': 'PLACEHOLDER_mask_rcnn_x101'},
                         # YOLOv8 segmentation models
-                        {'value': 'yolov8n-seg', 'label': 'YOLOv8 Nano Segmentation (fastest)', 'framework': 'yolov8'},
-                        {'value': 'yolov8s-seg', 'label': 'YOLOv8 Small Segmentation', 'framework': 'yolov8'},
-                        {'value': 'yolov8m-seg', 'label': 'YOLOv8 Medium Segmentation (balanced)', 'framework': 'yolov8'},
-                        {'value': 'yolov8l-seg', 'label': 'YOLOv8 Large Segmentation', 'framework': 'yolov8'},
-                        {'value': 'yolov8x-seg', 'label': 'YOLOv8 XLarge Segmentation (most accurate)', 'framework': 'yolov8'}
+                        {'value': 'yolov8n-seg', 'label': 'YOLOv8 Nano Segmentation (fastest)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8n_seg'},
+                        {'value': 'yolov8s-seg', 'label': 'YOLOv8 Small Segmentation', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8s_seg'},
+                        {'value': 'yolov8m-seg', 'label': 'YOLOv8 Medium Segmentation (balanced)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8m_seg'},
+                        {'value': 'yolov8l-seg', 'label': 'YOLOv8 Large Segmentation', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8l_seg'},
+                        {'value': 'yolov8x-seg', 'label': 'YOLOv8 XLarge Segmentation (most accurate)', 'framework': 'yolov8', 'training_id': 'PLACEHOLDER_yolov8x_seg'}
                     ]
                 },
                 'device': {
@@ -444,7 +445,8 @@ class ToolRegistry:
                     'options': [
                         {'value': 'cpu', 'label': 'CPU'},
                         {'value': 'cuda', 'label': 'CUDA (GPU)'},
-                        {'value': 'mps', 'label': 'MPS (Apple Silicon)'}
+                        {'value': 'mps', 'label': 'MPS (Apple Silicon)'},
+                        {'value': 'api', 'label': 'API (Datamarkin Cloud)'}
                     ]
                 }
             }
