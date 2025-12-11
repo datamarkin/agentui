@@ -110,6 +110,18 @@ class ToolRegistry:
             'optional_inputs': self.get_optional_inputs(tool_type)
         }
 
+    #   Hide any parameter by adding 'hidden': True to its entry in parameter_options:
+    #   # In registry.py
+    #   'device': {
+    #       'type': 'select',
+    #       'hidden': True,  # This hides it from UI
+    #       'options': [
+    #           {'value': 'cpu', 'label': 'CPU'},
+    #           {'value': 'cuda', 'label': 'CUDA (GPU)'},
+    #           {'value': 'mps', 'label': 'MPS (Apple Silicon)'},
+    #           {'value': 'api', 'label': 'API (Datamarkin Cloud)'}
+    #       ]
+    #   }
     # Unified tool metadata - single source of truth
     TOOL_METADATA = {
         # Input/Output

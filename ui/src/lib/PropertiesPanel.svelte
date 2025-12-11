@@ -89,6 +89,8 @@
         {#if Object.keys(parameters).length > 0}
             {#each Object.entries(parameters) as [key, value]}
                 {@const paramType = getParameterType(value)}
+                {@const paramOptions = getParameterOptions(selectedNode.data.nodeType, key)}
+                {#if !paramOptions?.hidden}
                 <div class="panel-block">
                     <div class="field" style="width: 100%;">
                         <label class="label is-small" for={key}>{formatParameterLabel(key)}</label>
@@ -120,8 +122,7 @@
                                         on:input={(e) => handleParameterChange(key, e.target.value)}
                                         style="width: 40px; height: 32px; padding: 1px; border-radius: 4px;"
                                 />
-                            {:else if getParameterOptions(selectedNode.data.nodeType, key)}
-                                {@const paramOptions = getParameterOptions(selectedNode.data.nodeType, key)}
+                            {:else if paramOptions}
                                 <div class="select is-small">
                                     <select
                                             id={key}
@@ -146,6 +147,7 @@
                         </div>
                     </div>
                 </div>
+                {/if}
             {/each}
         {:else}
             <div class="panel-block">
