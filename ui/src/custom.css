@@ -539,3 +539,19 @@ body {
     font-size: 0.875rem;
     border: 1px solid #dbdbdb;
 }
+
+.node-completed {
+    outline: 0.0625rem solid #00ff00; /* outer half */
+    box-shadow: inset 0 0 0 0.0625rem #00ff00; /* inner half */
+}
+
+.node-error {
+    outline: 0.0625rem solid #ff0000; /* outer half */
+    box-shadow: inset 0 0 0 0.0625rem #ff0000; /* inner half */
+}
+
+.node-running {
+    outline: 0.0625rem solid #1d86c9; /* outer half */
+    box-shadow: inset 0 0 0 0.0625rem #1d86c9; /* inner half */
+}
+

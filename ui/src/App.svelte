@@ -247,9 +247,33 @@
         );
     }
 
+    // Helper to strip execution state classes from a node's class string
+    function stripExecutionClasses(classStr) {
+        return classStr
+            .replace(/\s*node-running/g, '')
+            .replace(/\s*node-completed/g, '')
+            .replace(/\s*node-error/g, '')
+            .replace(/\s*node-has-output/g, '');
+    }
+
+    // Update a single node's class with execution state
+    function updateNodeClass(nodeId, stateClass) {
+        nodes.update(n => n.map(node => {
+            if (node.id !== nodeId) return node;
+            const baseClass = stripExecutionClasses(node.class);
+            return { ...node, class: `${baseClass} ${stateClass}` };
+        }));
+    }
+
     async function executeWorkflow() {
         isExecuting.set(true);
-        executionResults.set(null);
+        executionResults.set({ success: true, results: {} });
+
+        // Reset all node classes before starting
+        nodes.update(n => n.map(node => ({
+            ...node,
+            class: stripExecutionClasses(node.class)
+        })));
 
         try {
             const workflow = {
@@ -257,7 +281,7 @@
                 edges: $edges
             };
 
-            const response = await fetch('/api/workflow/execute', {
+            const response = await fetch('/api/workflow/stream', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -265,19 +289,49 @@
                 body: JSON.stringify({ workflow })
             });
 
-            const result = await response.json();
-            executionResults.set(result);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-            // Add 'node-has-output' class to nodes that have outputs
-            if (result.success && result.results) {
-                nodes.update(n => n.map(node => {
-                    const hasOutput = result.results[node.id];
-                    const baseClass = node.class.replace(/\s*node-has-output/g, '');
-                    return {
-                        ...node,
-                        class: hasOutput ? `${baseClass} node-has-output` : baseClass
-                    };
-                }));
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Keep incomplete line in buffer
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.done) {
+                            // Workflow complete
+                            isExecuting.set(false);
+                        } else if (data.error && !data.tool_id) {
+                            // Global error
+                            executionResults.update(r => ({ ...r, success: false, error: data.error }));
+                            isExecuting.set(false);
+                        } else if (data.status === 'running') {
+                            updateNodeClass(data.tool_id, 'node-running');
+                        } else if (data.status === 'completed') {
+                            updateNodeClass(data.tool_id, 'node-completed node-has-output');
+                            // Store result
+                            executionResults.update(r => ({
+                                ...r,
+                                results: { ...r.results, [data.tool_id]: data.result }
+                            }));
+                        } else if (data.status === 'error') {
+                            updateNodeClass(data.tool_id, 'node-error');
+                            executionResults.update(r => ({
+                                ...r,
+                                success: false,
+                                error: data.error
+                            }));
+                            isExecuting.set(false);
+                        }
+                    }
+                }
             }
         } catch (error) {
             executionResults.set({

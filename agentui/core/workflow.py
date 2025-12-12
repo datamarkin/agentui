@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Generator, Tuple
 from collections import defaultdict, deque
 from .tool import Tool, Connection
 
@@ -102,6 +102,55 @@ class WorkflowEngine:
 
         # Return all results for UI inspection
         return all_results
+
+    def execute_streaming(self) -> Generator[Tuple[str, str, Optional[Dict[str, Any]]], None, None]:
+        """
+        Execute the workflow, yielding status updates after each tool.
+
+        Yields:
+            Tuple of (tool_id, status, result) where:
+            - status is "running", "completed", or "error"
+            - result is the tool output dict (for completed) or error message (for error)
+        """
+        execution_order = self.get_execution_order()
+        terminal_tools = self.get_terminal_tools()
+
+        for tool_id in execution_order:
+            tool = self.tools[tool_id]
+
+            # Signal that this tool is starting
+            yield (tool_id, "running", None)
+
+            # Set inputs from connected tools
+            for conn in self.connections:
+                if conn.target_id == tool_id:
+                    source_tool = self.tools[conn.source_id]
+                    output = source_tool.get_output(conn.source_output)
+                    if output:
+                        tool.set_input(conn.target_input, output.data, output.data_type)
+
+            # Execute the tool
+            try:
+                if hasattr(tool, 'process_with_auto_batching'):
+                    success = tool.process_with_auto_batching()
+                else:
+                    success = tool.process()
+
+                if not success:
+                    error_msg = f"Tool '{tool.tool_type}' (ID: {tool_id}) failed to execute."
+                    yield (tool_id, "error", {"error": error_msg})
+                    return  # Stop execution on error
+
+                result = {
+                    'type': tool.tool_type,
+                    'outputs': {name: output.data for name, output in tool.outputs.items()},
+                    'is_terminal': tool_id in terminal_tools
+                }
+                yield (tool_id, "completed", result)
+
+            except Exception as e:
+                yield (tool_id, "error", {"error": str(e)})
+                return  # Stop execution on error
 
     def to_json(self) -> str:
         """Export workflow to JSON (Svelte Flow compatible format)"""

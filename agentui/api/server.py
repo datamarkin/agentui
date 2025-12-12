@@ -1,14 +1,39 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Any
 import base64
+import io
 import json
 import os
 
 from ..core.workflow import WorkflowEngine
 from ..core.registry import registry
+
+
+def serialize_tool_result(tool_id: str, result: dict) -> dict:
+    """Convert tool result to JSON-serializable format."""
+    serialized = {
+        'tool_id': tool_id,
+        'type': result['type'],
+        'outputs': {},
+        'is_terminal': result.get('is_terminal', False)
+    }
+
+    for output_name, output_value in result['outputs'].items():
+        if hasattr(output_value, 'save'):  # PIL Image
+            buffer = io.BytesIO()
+            output_value.save(buffer, format='JPEG')
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            serialized['outputs'][output_name] = f"data:image/jpeg;base64,{img_str}"
+        elif hasattr(output_value, 'to_dict'):  # Detections or similar
+            serialized['outputs'][output_name] = output_value.to_dict()
+        else:
+            serialized['outputs'][output_name] = output_value
+
+    return serialized
 
 
 app = FastAPI(title="AgentUI Workflow API", version="1.0.0")
@@ -79,6 +104,42 @@ async def execute_workflow(request: WorkflowRequest):
 
     except Exception as e:
         return ExecuteResponse(success=False, error=str(e))
+
+
+@app.post("/api/workflow/stream")
+async def stream_workflow(request: WorkflowRequest):
+    """Execute workflow with SSE streaming, yielding results as each tool completes."""
+
+    def event_generator():
+        try:
+            workflow_json = json.dumps(request.workflow)
+            workflow = WorkflowEngine.from_json(workflow_json, registry.get_all_types())
+
+            for tool_id, status, result in workflow.execute_streaming():
+                if status == "running":
+                    event = {"tool_id": tool_id, "status": "running"}
+                elif status == "completed":
+                    serialized = serialize_tool_result(tool_id, result)
+                    event = {"tool_id": tool_id, "status": "completed", "result": serialized}
+                else:  # error
+                    event = {"tool_id": tool_id, "status": "error", "error": result.get("error", "Unknown error")}
+
+                yield f"data: {json.dumps(event)}\n\n"
+
+            # Signal completion
+            yield f"data: {json.dumps({'done': True})}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 
 @app.post("/api/workflow/validate")
