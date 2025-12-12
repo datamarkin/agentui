@@ -5,10 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Datamarkin - Computer Vision Workflows</title>
-    <script type="module" crossorigin src="/assets/index-CV7Axjqk.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BdmYkHNg.css">
+    <script type="module" crossorigin src="/assets/index-ULYhlQlL.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-COA677Q9.css">
   </head>
   <body>
+    
+    <script>
+      window.APP_CONFIG = {
+        deploymentMode: "{{ deployment_mode }}",
+        {% if user %}
+        user: {
+          id: "{{ user.id }}",
+          name: "{{ user.name }}"
+        },
+        {% else %}
+        user: null,
+        {% endif %}
+        workflowId: {{ workflow_id | tojson | safe if workflow_id else 'null' }}
+      };
+    </script>
     <div id="app"></div>
   </body>
 </html>

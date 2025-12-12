@@ -1,4 +1,6 @@
 <script>
+  import { openExploreModal } from './stores.js';
+
   export let executeWorkflow;
   export let exportWorkflow;
   export let importWorkflow;
@@ -33,6 +35,10 @@
 
           <button class="button" on:click={handleImportClick}>
             Import
+          </button>
+
+          <button class="button is-info" on:click={openExploreModal}>
+            Explore
           </button>
 
 <!--          <button class="button is-light" on:click={clearWorkflow}>-->

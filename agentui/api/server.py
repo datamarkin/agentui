@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import base64
 import io
 import json
@@ -11,6 +12,10 @@ import os
 
 from ..core.workflow import WorkflowEngine
 from ..core.registry import registry
+
+# Setup Jinja2 templates
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+templates = Jinja2Templates(directory=static_dir)
 
 
 def serialize_tool_result(tool_id: str, result: dict) -> dict:
@@ -67,6 +72,30 @@ async def root():
 async def get_available_tools():
     """Get all available tool types and their information"""
     return registry.get_all_tool_info()
+
+
+@app.get("/api/workflows")
+async def get_workflows():
+    """Proxy to fetch workflow templates from external API"""
+    import httpx
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("https://api.datamarkin.com/items/workflows")
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/workflows/{workflow_id}")
+async def get_workflow(workflow_id: str):
+    """Proxy to fetch a single workflow from external API"""
+    import httpx
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"https://api.datamarkin.com/items/workflows/{workflow_id}")
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/workflow/execute", response_model=ExecuteResponse)
@@ -175,10 +204,34 @@ async def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Serve static files (for the web UI) - MUST be mounted last
-static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+# Serve main app via Jinja2 template (for APP_CONFIG injection)
+@app.get("/", response_class=HTMLResponse)
+@app.get("/workflows/{workflow_id}", response_class=HTMLResponse)
+async def serve_app(request: Request, workflow_id: Optional[str] = None):
+    """Serve the main app with injected config"""
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "deployment_mode": "local",
+        "user": None,  # Placeholder - will be set by parent app in deployed mode
+        "workflow_id": workflow_id
+    })
+
+
+# Serve logo.png from static directory
+@app.get("/logo.png")
+async def serve_logo():
+    from fastapi.responses import FileResponse
+    logo_path = os.path.join(static_dir, "logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Logo not found")
+
+
+# Serve static assets (CSS, JS, images) - MUST be mounted last
 if os.path.exists(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 
 def main(host="0.0.0.0", port=8000, reload=False):

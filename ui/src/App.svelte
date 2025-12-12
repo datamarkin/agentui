@@ -8,8 +8,9 @@
     import FlowDropZone from './lib/FlowDropZone.svelte';
     import DrawerSidebar from './lib/DrawerSidebar.svelte';
     import NodePalettePanel from './lib/NodePalettePanel.svelte';
+    import ExploreModal from './lib/ExploreModal.svelte';
     import { generateNodeClasses } from './lib/utils.js';
-    import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection } from './lib/stores.js';
+    import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection, appConfig } from './lib/stores.js';
 
     // Factory function for MediaInput node (single source of truth)
     const createMediaInputNode = () => ({
@@ -53,10 +54,39 @@
             availableNodes.set(toolTypes);
 
             console.log('App initialized successfully');
+
+            // Check if we should load a workflow from URL
+            const config = $appConfig;
+            if (config.workflowId) {
+                console.log('Loading workflow from URL:', config.workflowId);
+                await loadWorkflowById(config.workflowId);
+            }
         } catch (error) {
             console.error('Failed to fetch tool types:', error);
         }
     });
+
+    async function loadWorkflowById(workflowId) {
+        try {
+            const response = await fetch(`/api/workflows/${workflowId}`);
+            if (!response.ok) {
+                throw new Error('Failed to load workflow');
+            }
+            const data = await response.json();
+            const workflow = data.data || data;
+
+            if (workflow.code) {
+                nodes.set(workflow.code.nodes || []);
+                edges.set(workflow.code.edges || []);
+                console.log('Workflow loaded successfully:', workflow.name);
+            } else {
+                console.warn('Workflow has no code data');
+            }
+        } catch (error) {
+            console.error('Error loading workflow:', error);
+            alert(`Failed to load workflow: ${error.message}`);
+        }
+    }
 
     function initializeCanvas() {
         console.log('initializeCanvas called');
@@ -431,5 +461,8 @@
     {updateNodeParameters}
     executionResults={$executionResults}
 />
+
+<!-- Explore workflows modal -->
+<ExploreModal />
 
 </SvelteFlowProvider>

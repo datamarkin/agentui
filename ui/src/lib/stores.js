@@ -46,3 +46,25 @@ export function clearPendingConnection() {
     isPendingConnection.set(false);
     console.log('Pending connection cleared');
 }
+
+// App config from window (injected by Jinja2)
+function getAppConfig() {
+    if (typeof window !== 'undefined' && window.APP_CONFIG) {
+        return window.APP_CONFIG;
+    }
+    return { deploymentMode: 'local', user: null, workflowId: null };
+}
+
+export const appConfig = writable(getAppConfig());
+
+// Explore modal state management
+export const isExploreModalOpen = writable(false);
+export const workflowTemplates = writable([]);
+
+export function openExploreModal() {
+    isExploreModalOpen.set(true);
+}
+
+export function closeExploreModal() {
+    isExploreModalOpen.set(false);
+}
