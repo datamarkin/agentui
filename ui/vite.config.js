@@ -9,6 +9,7 @@ const injectJinja2Config = () => ({
     const jinja2Script = `
     <script>
       window.APP_CONFIG = {
+        apiBase: "{{ api_base }}",
         deploymentMode: "{{ deployment_mode }}",
         {% if user %}
         user: {

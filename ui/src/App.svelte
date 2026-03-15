@@ -9,7 +9,7 @@
     import DrawerSidebar from './lib/DrawerSidebar.svelte';
     import NodePalettePanel from './lib/NodePalettePanel.svelte';
     import ExploreModal from './lib/ExploreModal.svelte';
-    import { generateNodeClasses } from './lib/utils.js';
+    import { generateNodeClasses, apiUrl } from './lib/utils.js';
     import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection, appConfig } from './lib/stores.js';
 
     // Factory function for MediaInput node (single source of truth)
@@ -48,7 +48,7 @@
         console.log('App onMount started');
         // Fetch available tool types
         try {
-            const response = await fetch('/api/tools');
+            const response = await fetch(apiUrl('/api/tools'));
             const toolTypes = await response.json();
             console.log('Tool types fetched:', toolTypes);
             availableNodes.set(toolTypes);
@@ -68,7 +68,7 @@
 
     async function loadWorkflowById(workflowId) {
         try {
-            const response = await fetch(`/api/workflows/${workflowId}`);
+            const response = await fetch(apiUrl(`/api/workflows/${workflowId}`));
             if (!response.ok) {
                 throw new Error('Failed to load workflow');
             }
@@ -311,7 +311,7 @@
                 edges: $edges
             };
 
-            const response = await fetch('/api/workflow/stream', {
+            const response = await fetch(apiUrl('/api/workflow/stream'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

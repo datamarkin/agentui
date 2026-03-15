@@ -3,6 +3,18 @@
  */
 
 /**
+ * Build an API URL with the configured base prefix.
+ * When AgentUI is mounted at a sub-path (e.g. /agentui), all API calls
+ * need to include that prefix. In standalone mode apiBase is empty.
+ * @param {string} path - The API path (e.g. '/api/tools')
+ * @returns {string} Full URL with prefix
+ */
+export function apiUrl(path) {
+    const config = (typeof window !== 'undefined' && window.APP_CONFIG) || {};
+    return (config.apiBase || '') + path;
+}
+
+/**
  * Format parameter label - convert snake_case to Title Case
  * @param {string} key - The parameter key
  * @returns {string} Formatted label

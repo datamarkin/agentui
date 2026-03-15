@@ -1,5 +1,5 @@
 <script>
-    import { formatParameterLabel, getParameterType, parseValue } from './utils.js';
+    import { formatParameterLabel, getParameterType, parseValue, apiUrl } from './utils.js';
 
     export let selectedNode;
     export let updateNodeParameters;
@@ -31,7 +31,7 @@
         formData.append('file', file);
 
         try {
-            const response = await fetch('/api/upload/image', {
+            const response = await fetch(apiUrl('/api/upload/image'), {
                 method: 'POST',
                 body: formData
             });

@@ -49,8 +49,9 @@ def cmd_info(args):
     # Check dependencies
     print("Dependencies:")
     dependencies = [
-        'fastapi',
-        'uvicorn',
+        'flask',
+        'flask_cors',
+        'requests',
         'pillow',
         'numpy',
         'pixelflow',

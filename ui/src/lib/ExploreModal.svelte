@@ -1,5 +1,6 @@
 <script>
   import { isExploreModalOpen, closeExploreModal, workflowTemplates } from './stores.js';
+  import { apiUrl } from './utils.js';
   import WorkflowPreview from './WorkflowPreview.svelte';
 
   let isLoading = false;
@@ -17,7 +18,7 @@
     isLoading = true;
     error = null;
     try {
-      const response = await fetch('/api/workflows');
+      const response = await fetch(apiUrl('/api/workflows'));
       if (!response.ok) {
         throw new Error('Failed to fetch workflows');
       }
