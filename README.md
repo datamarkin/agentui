@@ -29,6 +29,33 @@ agentui start
 
 That's it. The UI is already bundled - no separate build step needed.
 
+## Embedding in Your Flask App
+
+AgentUI can be dropped into any Flask application with minimal code:
+
+```python
+from flask import Flask
+import agentui
+
+app = Flask(__name__)
+
+# Optional: Inject a custom header (e.g., navigation, user menu)
+agentui.set_header("my_app_header.html",
+                   context_fn=lambda: {"user": current_user.name})
+
+# Mount AgentUI at /workflow-builder
+app.register_blueprint(agentui.create_agentui_bp(), url_prefix='/workflow-builder')
+
+# Access the runner view at /workflow-builder/run/<workflow_id>
+```
+
+**Key integration features:**
+- **Custom header injection**: Replace the default toolbar with your own UI
+- **Runner mode**: Serve workflows in execution-only mode via `/run/<workflow_id>`
+- **JS bridge**: Control workflow execution from your page via `window.AgentUI.run()`, `.getWorkflow()`, etc.
+
+See the [Integration Guide](#integration-guide) below for details.
+
 ## What You Can Build
 
 ### ML-Powered Tools
@@ -176,6 +203,89 @@ Future additions will focus on:
 - Advanced tracking and analytics
 - Real-time streaming workflows
 
+
+## Integration Guide
+
+### Custom Header Injection
+
+Replace AgentUI's default toolbar with your own header:
+
+```python
+import agentui
+
+agentui.set_header(
+    "templates/agentui_custom_header.html",  # Jinja2 template path
+    context_fn=lambda: {                      # Optional: dynamic context per request
+        "user": current_user.name,
+        "workflows": get_saved_workflows()
+    }
+)
+```
+
+Your header template has access to `window.AgentUI` for programmatic control:
+
+```html
+<!-- templates/agentui_custom_header.html -->
+<nav class="your-custom-navbar">
+    <button onclick="window.AgentUI.run()">Run Workflow</button>
+    <button onclick="window.AgentUI.exportWorkflow()">Export</button>
+    <select onchange="window.AgentUI.loadWorkflow(this.value)">
+        {% for wf in workflows %}
+        <option value="{{ wf.id }}">{{ wf.name }}</option>
+        {% endfor %}
+    </select>
+</nav>
+```
+
+### JS Bridge API
+
+When embedding, control AgentUI from your header via `window.AgentUI`:
+
+| Method | Description |
+|--------|-------------|
+| `run()` | Execute the current workflow |
+| `getWorkflow()` | Return `{ nodes, edges }` of current workflow |
+| `loadWorkflow(id)` | Load a workflow by ID |
+| `saveWorkflow(name, description)` | Save current workflow to the cloud API |
+| `isRunning()` | Check if workflow is currently executing |
+
+### Runner Mode
+
+Serve a workflow in execution-only mode (no editor):
+
+```python
+# In your Flask app
+@app.route('/process/<workflow_id>')
+def process_workflow(workflow_id):
+    return redirect(url_for('agentui', view_mode='runner', workflow_id=workflow_id))
+```
+
+Or directly via AgentUI's blueprint:
+```
+GET /workflow-builder/run/my-workflow-id
+```
+
+The runner view provides:
+- Clean upload interface for input images
+- Execute button with progress indicators
+- Formatted results display (images, detections table, JSON data)
+
+### Event Listening
+
+Listen for execution state changes from your header:
+
+```javascript
+window.addEventListener('agentui:statechange', (event) => {
+    const { isExecuting } = event.detail;
+    if (isExecuting) {
+        // Disable buttons, show spinner
+    } else {
+        // Re-enable buttons
+    }
+});
+```
+
+---
 
 ## Documentation
 
