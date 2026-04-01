@@ -1,6 +1,6 @@
 <script>
-    import { onMount, setContext } from 'svelte';
-    import { writable } from 'svelte/store';
+    import { onMount, onDestroy, setContext } from 'svelte';
+    import { writable, get } from 'svelte/store';
     import { SvelteFlow, Controls, ControlButton, Background, MiniMap, SvelteFlowProvider } from '@xyflow/svelte';
 
     import Toolbar from './lib/Toolbar.svelte';
@@ -9,8 +9,9 @@
     import DrawerSidebar from './lib/DrawerSidebar.svelte';
     import NodePalettePanel from './lib/NodePalettePanel.svelte';
     import ExploreModal from './lib/ExploreModal.svelte';
+    import RunnerView from './lib/RunnerView.svelte';
     import { generateNodeClasses, apiUrl } from './lib/utils.js';
-    import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection, appConfig } from './lib/stores.js';
+    import { openSidebar, closeSidebar, pendingConnection, clearPendingConnection, appConfig, viewMode } from './lib/stores.js';
 
     // Factory function for MediaInput node (single source of truth)
     const createMediaInputNode = () => ({
@@ -35,6 +36,17 @@
     let isExecuting = writable(false);
 
     let svelteFlowInstance;
+    let runnerExecuteFn = null;
+    let runnerCanExecute = false;
+    let unsubscribeExecuting;
+
+    function setRunnerExecute(fn) {
+        runnerExecuteFn = fn;
+    }
+
+    function handleRunnerCanExecuteChange(can) {
+        runnerCanExecute = can;
+    }
 
     // Set context for child components - must be during initialization
     setContext('availableNodes', availableNodes);
@@ -46,6 +58,12 @@
 
     onMount(async () => {
         console.log('App onMount started');
+
+        // Apply toolbar-hidden body class when default toolbar is suppressed
+        if ($appConfig.hideToolbar) {
+            document.body.classList.add('toolbar-hidden');
+        }
+
         // Fetch available tool types
         try {
             const response = await fetch(apiUrl('/api/tools'));
@@ -64,6 +82,23 @@
         } catch (error) {
             console.error('Failed to fetch tool types:', error);
         }
+
+        // Expose JS bridge so the host app's custom header can control the workflow
+        window.AgentUI = {
+            run:          () => executeWorkflow(),
+            getWorkflow:  () => ({ nodes: get(nodes), edges: get(edges) }),
+            loadWorkflow: (id) => loadWorkflowById(id),
+            saveWorkflow: (name, description) => saveCurrentWorkflow(name, description),
+            isRunning:    () => get(isExecuting),
+        };
+
+        // Dispatch a custom event whenever execution state changes so the
+        // host app's custom header can react (e.g. disable the Run button)
+        unsubscribeExecuting = isExecuting.subscribe(value => {
+            window.dispatchEvent(new CustomEvent('agentui:statechange', {
+                detail: { isExecuting: value }
+            }));
+        });
     });
 
     async function loadWorkflowById(workflowId) {
@@ -413,6 +448,21 @@
         selectedNode.set(null);
         executionResults.set(null);
     }
+
+    onDestroy(() => {
+        if (unsubscribeExecuting) unsubscribeExecuting();
+    });
+
+    async function saveCurrentWorkflow(name, description = '') {
+        const workflow = { nodes: get(nodes), edges: get(edges) };
+        const response = await fetch(apiUrl('/api/workflows'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description, workflow })
+        });
+        if (!response.ok) throw new Error('Failed to save workflow');
+        return await response.json();
+    }
 </script>
 
 <SvelteFlowProvider>
@@ -420,10 +470,23 @@
                     {executeWorkflow}
                     {exportWorkflow}
                     {importWorkflow}
-                    {clearWorkflow}
                     isExecuting={$isExecuting}
+                    runnerExecute={runnerExecuteFn}
+                    {runnerCanExecute}
             />
 
+{#if $viewMode === 'run'}
+<!-- Runner view -->
+<div class="main-content">
+    <RunnerView
+        {nodes}
+        {edges}
+        {isExecuting}
+        onExecute={setRunnerExecute}
+        onCanExecuteChange={handleRunnerCanExecuteChange}
+    />
+</div>
+{:else}
 <!-- Left-side node palette (always visible) -->
 <NodePalettePanel {availableNodes} />
 
@@ -464,5 +527,6 @@
 
 <!-- Explore workflows modal -->
 <ExploreModal />
+{/if}
 
 </SvelteFlowProvider>

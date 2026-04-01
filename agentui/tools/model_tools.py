@@ -42,8 +42,8 @@ def _get_training_id(tool_type: str, model_variant: str) -> Optional[str]:
     Returns:
         The training_id for Datamarkin API, or None if not found
     """
-    from ..core.registry import TOOL_METADATA
-    options = TOOL_METADATA.get(tool_type, {}).get('parameter_options', {}).get('model_variant', {}).get('options', [])
+    from ..core.registry import registry
+    options = registry.TOOL_METADATA.get(tool_type, {}).get('parameter_options', {}).get('model_variant', {}).get('options', [])
     for opt in options:
         if opt.get('value') == model_variant:
             return opt.get('training_id')
@@ -196,7 +196,7 @@ class ObjectDetection(MozoModelToolBase):
             else:
                 # Use local Mozo model
                 print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
-                model = self.model_manager.get_model(framework, model_variant)
+                model = self.model_manager.get_model(framework, model_variant, device=device)
 
             # Run prediction - returns PixelFlow Detections
             print(f"{self.tool_type}: Running inference...")
@@ -287,7 +287,7 @@ class InstanceSegmentation(MozoModelToolBase):
             else:
                 # Use local Mozo model
                 print(f"{self.tool_type}: Loading model '{framework}/{model_variant}' on {device}...")
-                model = self.model_manager.get_model(framework, model_variant)
+                model = self.model_manager.get_model(framework, model_variant, device=device)
 
             # Run prediction
             print(f"{self.tool_type}: Running inference...")
@@ -361,7 +361,7 @@ class DepthEstimation(MozoModelToolBase):
 
             # Get model from Mozo
             print(f"{self.tool_type}: Loading model 'depth_anything/{model_variant}' on {device}...")
-            model = self.model_manager.get_model('depth_anything', model_variant)
+            model = self.model_manager.get_model('depth_anything', model_variant, device=device)
 
             # Run prediction - returns PIL Image (depth map)
             print(f"{self.tool_type}: Running inference...")

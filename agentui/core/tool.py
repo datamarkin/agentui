@@ -167,6 +167,24 @@ class Tool(ABC):
         """Deserialize tool from dictionary"""
         return cls(tool_id=data['id'], **data.get('parameters', {}))
 
+    def get_parameter_options(self) -> Dict[str, Any]:
+        """Return dynamic parameter options for UI dropdowns.
+
+        Override in subclasses to provide options that depend on runtime state
+        (e.g. querying a database). Returned dict is merged with any static
+        parameter_options defined in the registry metadata.
+
+        Example return value::
+
+            {
+                "model_id": {
+                    "type": "select",
+                    "options": [{"value": "abc", "label": "My Model"}]
+                }
+            }
+        """
+        return {}
+
     def get_tool_info(self) -> Dict[str, Any]:
         """Get tool information for UI"""
         return {

@@ -42,6 +42,8 @@ class ToolRegistry:
 
     def __init__(self):
         self._tools: Dict[str, Type[Tool]] = {}
+        self._external_metadata: Dict[str, dict] = {}
+        self._tool_info_cache: Dict[str, dict] | None = None
         self._register_builtin_tools()
 
     def _register_builtin_tools(self):
@@ -80,6 +82,14 @@ class ToolRegistry:
         """Register a tool class"""
         tool_instance = tool_class()
         self._tools[tool_instance.tool_type] = tool_class
+        self._tool_info_cache = None
+
+    def register_external(self, tool_class: Type[Tool], metadata: dict):
+        """Register an externally-defined tool with its UI metadata."""
+        tool_instance = tool_class()
+        self._tools[tool_instance.tool_type] = tool_class
+        self._external_metadata[tool_instance.tool_type] = metadata
+        self._tool_info_cache = None
 
     def get_tool_class(self, tool_type: str) -> Type[Tool]:
         """Get tool class by type"""
@@ -860,42 +870,55 @@ class ToolRegistry:
 
     def _get_default_parameters(self, tool_type: str) -> Dict[str, any]:
         """Get default parameters for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('parameters', {})
+        return self._meta(tool_type).get('parameters', {})
+
+    def _meta(self, tool_type: str) -> dict:
+        """Return metadata for a tool, checking builtin then external."""
+        return self.TOOL_METADATA.get(tool_type) or self._external_metadata.get(tool_type, {})
 
     def _get_tool_category(self, tool_type: str) -> str:
         """Get category for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('category', 'Other')
-
+        return self._meta(tool_type).get('category', 'Other')
 
     def _get_tool_description(self, tool_type: str) -> str:
         """Get description for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('description', 'Process image')
+        return self._meta(tool_type).get('description', 'Process image')
 
     def _get_tool_name(self, tool_type: str) -> str:
         """Get display name for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('name', tool_type)
+        return self._meta(tool_type).get('name', tool_type)
 
     def _get_parameter_options(self, tool_type: str) -> Dict[str, any]:
-        """Get parameter options for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('parameter_options', {})
+        """Get parameter options for a tool type.
+
+        Merges static metadata with dynamic options returned by the tool instance.
+        Dynamic options (from get_parameter_options()) take precedence.
+        """
+        static = self._meta(tool_type).get('parameter_options', {})
+        tool_class = self._tools.get(tool_type)
+        if tool_class is None:
+            return static
+        # Only instantiate if the subclass actually overrides get_parameter_options
+        if tool_class.get_parameter_options is Tool.get_parameter_options:
+            return static
+        dynamic = tool_class().get_parameter_options()
+        return {**static, **dynamic}
 
     def get_required_inputs(self, tool_type: str) -> List[str]:
         """Get required inputs for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('required_inputs', [])
+        return self._meta(tool_type).get('required_inputs', [])
 
     def get_optional_inputs(self, tool_type: str) -> List[str]:
         """Get optional inputs for a tool type"""
-        return self.TOOL_METADATA.get(tool_type, {}).get('optional_inputs', [])
+        return self._meta(tool_type).get('optional_inputs', [])
 
     def get_all_tool_info(self) -> Dict[str, Dict[str, any]]:
         """Get information about all tool types"""
-        return {tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()}
-        # """Get information about all tool types (excludes MediaInput - always on canvas)"""
-        # return {
-        #     tool_type: self.get_tool_info(tool_type)
-        #     for tool_type in self._tools.keys()
-        #     if tool_type != 'MediaInput'  # MediaInput is locked on canvas, not in palette
-        # }
+        if self._tool_info_cache is None:
+            self._tool_info_cache = {
+                tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()
+            }
+        return self._tool_info_cache
 
 
 # Global registry instance

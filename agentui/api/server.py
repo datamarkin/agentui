@@ -5,6 +5,7 @@ import base64
 import io
 import json
 import os
+import requests as req
 
 from ..core.workflow import WorkflowEngine
 from ..core.registry import registry
@@ -56,23 +57,32 @@ def get_available_tools():
     return jsonify(registry.get_all_tool_info())
 
 
-@bp.route("/api/workflows")
-def get_workflows():
-    """Proxy to fetch workflow templates from external API"""
-    import requests as req
+@bp.route("/api/workflows", methods=["GET"])
+def workflows():
+    """List workflows from the cloud proxy."""
     try:
-        response = req.get("https://api.datamarkin.com/items/workflows")
+        response = req.get("https://api.datamarkin.com/items/workflows", timeout=10)
         return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@bp.route("/api/workflows/<workflow_id>")
-def get_workflow(workflow_id):
-    """Proxy to fetch a single workflow from external API"""
-    import requests as req
+@bp.route("/api/workflows", methods=["POST"])
+def save_workflow():
+    """Save a workflow via the cloud proxy (used by JS bridge saveWorkflow)."""
     try:
-        response = req.get(f"https://api.datamarkin.com/items/workflows/{workflow_id}")
+        data = request.get_json()
+        response = req.post("https://api.datamarkin.com/items/workflows", json=data, timeout=10)
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/api/workflows/<workflow_id>", methods=["GET"])
+def workflow(workflow_id):
+    """Fetch a single workflow from the cloud proxy."""
+    try:
+        response = req.get(f"https://api.datamarkin.com/items/workflows/{workflow_id}", timeout=10)
         return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -90,22 +100,10 @@ def execute_workflow():
 
         results = workflow.execute()
 
-        serializable_results = {}
-        for tool_id, result in results.items():
-            serializable_results[tool_id] = {
-                'type': result['type'],
-                'outputs': {}
-            }
-            for output_name, output_value in result['outputs'].items():
-                if hasattr(output_value, 'save'):  # PIL Image
-                    buffer = io.BytesIO()
-                    output_value.save(buffer, format='JPEG')
-                    img_str = base64.b64encode(buffer.getvalue()).decode()
-                    serializable_results[tool_id]['outputs'][output_name] = f"data:image/jpeg;base64,{img_str}"
-                elif hasattr(output_value, 'to_dict'):  # PixelFlow Detections or similar
-                    serializable_results[tool_id]['outputs'][output_name] = output_value.to_dict()
-                else:
-                    serializable_results[tool_id]['outputs'][output_name] = output_value
+        serializable_results = {
+            tool_id: serialize_tool_result(tool_id, result)
+            for tool_id, result in results.items()
+        }
 
         return jsonify({"success": True, "results": serializable_results})
 
@@ -177,10 +175,14 @@ def upload_image():
         contents = file.read()
         base64_data = base64.b64encode(contents).decode('utf-8')
 
+        # Construct proper data URI for browser display
+        content_type = file.content_type or 'image/jpeg'
+        data_uri = f"data:{content_type};base64,{base64_data}"
+
         return jsonify({
             "filename": file.filename,
-            "data": base64_data,
-            "content_type": file.content_type
+            "data": data_uri,
+            "content_type": content_type
         })
 
     except Exception as e:
@@ -189,15 +191,28 @@ def upload_image():
 
 @bp.route("/")
 @bp.route("/workflows/<workflow_id>")
-def serve_app(workflow_id=None):
+def serve_app(workflow_id=None, view_mode="edit"):
     """Serve the main app with injected config"""
+    from agentui import _header_template, _header_context_fn
     api_base = request.script_root + bp.url_prefix if bp.url_prefix else ""
-    return render_template("index.html",
+    ctx = dict(
         deployment_mode="local",
         user=None,
         workflow_id=workflow_id,
         api_base=api_base,
+        hide_toolbar=bool(_header_template),
+        header_template=_header_template,
+        view_mode=view_mode,
     )
+    if _header_context_fn:
+        ctx.update(_header_context_fn())
+    return render_template("index.html", **ctx)
+
+
+@bp.route("/run/<workflow_id>")
+def serve_runner(workflow_id):
+    """Serve the runner view for a workflow"""
+    return serve_app(workflow_id=workflow_id, view_mode="runner")
 
 
 @bp.route("/logo.png")

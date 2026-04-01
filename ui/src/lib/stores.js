@@ -31,20 +31,15 @@ export function toggleSidebarMode(mode) {
 
 // Pending connection state management
 export const pendingConnection = writable(null);
-export const isPendingConnection = writable(false);
 
 // Function to set pending connection when handle is clicked
 export function setPendingConnection(nodeId, handleId, handleType) {
     pendingConnection.set({ nodeId, handleId, handleType });
-    isPendingConnection.set(true);
-    console.log('Pending connection set:', { nodeId, handleId, handleType });
 }
 
 // Function to clear pending connection
 export function clearPendingConnection() {
     pendingConnection.set(null);
-    isPendingConnection.set(false);
-    console.log('Pending connection cleared');
 }
 
 // App config from window (injected by Jinja2)
@@ -56,6 +51,10 @@ function getAppConfig() {
 }
 
 export const appConfig = writable(getAppConfig());
+
+// View mode: 'edit' (builder) or 'run' (runner)
+const initialViewMode = (typeof window !== 'undefined' && window.APP_CONFIG?.viewMode === 'runner') ? 'run' : 'edit';
+export const viewMode = writable(initialViewMode);
 
 // Explore modal state management
 export const isExploreModalOpen = writable(false);

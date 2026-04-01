@@ -1,5 +1,6 @@
 import os
 import base64
+import traceback
 from io import BytesIO
 from typing import Dict, Any
 from PIL import Image
@@ -32,18 +33,19 @@ class MediaInputTool(InputTool):
                 return False
 
             if image_path:
-                if not os.path.exists(image_path):
-                    print(f"MediaInput error: File not found: {image_path}")
-                    return False
                 try:
                     image = Image.open(image_path).convert('RGB')
+                except FileNotFoundError:
+                    print(f"MediaInput error: File not found: {image_path}")
+                    return False
                 except Exception as e:
                     print(f"MediaInput error: Failed to open image file '{image_path}': {e}")
                     return False
             elif image_data:
                 try:
-                    # Decode base64 image
-                    image_bytes = base64.b64decode(image_data)
+                    # Decode base64 image from data URI format: "data:<mime>;base64,<data>"
+                    _, encoded = image_data.split(',', 1)
+                    image_bytes = base64.b64decode(encoded)
                     image = Image.open(BytesIO(image_bytes)).convert('RGB')
                 except Exception as e:
                     print(f"MediaInput error: Failed to decode base64 image data: {e}")
@@ -53,7 +55,6 @@ class MediaInputTool(InputTool):
             return True
         except Exception as e:
             print(f"MediaInput error: Unexpected error: {e}")
-            import traceback
             traceback.print_exc()
             return False
 

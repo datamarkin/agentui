@@ -5,8 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Datamarkin - Computer Vision Workflows</title>
-    <script type="module" crossorigin src="/assets/index-ReB3cR0S.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-COA677Q9.css">
+    <script type="module" crossorigin src="./assets/index-CsZVb5Jh.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-YfBRuekA.css">
   </head>
   <body>
     
@@ -22,9 +22,12 @@
         {% else %}
         user: null,
         {% endif %}
-        workflowId: {{ workflow_id | tojson | safe if workflow_id else 'null' }}
+        workflowId: {{ workflow_id | tojson | safe if workflow_id else 'null' }},
+        hideToolbar: {{ hide_toolbar | tojson if hide_toolbar is defined else 'false' }},
+        viewMode: {{ view_mode | tojson if view_mode is defined else '"editor"' }}
       };
     </script>
+    {% if header_template %}{% include header_template %}{% endif %}
     <div id="app"></div>
   </body>
 </html>
