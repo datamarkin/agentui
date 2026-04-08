@@ -62,6 +62,7 @@
         // Apply toolbar-hidden body class when default toolbar is suppressed
         if ($appConfig.hideToolbar) {
             document.body.classList.add('toolbar-hidden');
+            document.documentElement.classList.remove('has-navbar-fixed-top');
         }
 
         // Fetch available tool types
