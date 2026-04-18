@@ -6,8 +6,6 @@ from ..tools.base_tools import (
     SaveImageTool
 )
 from ..tools.cv_tools import (
-    DominantColorTool,
-    QualityAnalysisTool,
     VisualizeDetectionsTool,
     BlendImagesTool
 )
@@ -54,10 +52,6 @@ class ToolRegistry:
 
         # Basic processing
         self.register(ConvertFormatTool)
-
-        # Analysis
-        self.register(DominantColorTool)
-        self.register(QualityAnalysisTool)
 
         # Combiners
         self.register(VisualizeDetectionsTool)
@@ -196,30 +190,6 @@ class ToolRegistry:
             }
         },
 
-        # Analysis
-        'DominantColor': {
-            'name': 'Dominant Color',
-            'category': 'Analysis',
-            'description': 'Extract dominant color from image',
-            'parameters': {
-                'num_colors': 5,
-                'color_format': 'hex',
-                'ignore_white': True,
-                'ignore_black': True
-            }
-        },
-        'QualityAnalysis': {
-            'name': 'Quality Analysis',
-            'category': 'Analysis',
-            'description': 'Analyze image quality metrics',
-            'parameters': {
-                'check_blur': True,
-                'check_brightness': True,
-                'check_contrast': True,
-                'blur_threshold': 100
-            }
-        },
-
         # Combine
         'VisualizeDetections': {
             'name': 'Visualize Detections',
@@ -321,7 +291,7 @@ class ToolRegistry:
             'name': 'Draw Polygons',
             'category': 'Annotation',
             'description': 'Draw polygon shapes on image using pixelflow',
-            'required_inputs': ['image', 'polygons'],
+            'required_inputs': ['image', 'detections'],
             'optional_inputs': [],
             'parameters': {
                 'thickness': 2,
@@ -374,9 +344,11 @@ class ToolRegistry:
             'name': 'Zone Analyzer',
             'category': 'Analysis',
             'description': 'Analyze object presence in predefined zones using pixelflow',
-            'required_inputs': ['image', 'detections', 'zone_definitions'],
+            'required_inputs': ['image', 'detections'],
             'optional_inputs': [],
-            'parameters': {}
+            'parameters': {
+                'zone_definitions': []
+            }
         },
 
         # Model tools (Mozo integration)
