@@ -23,8 +23,7 @@
             nodeType: 'MediaInput',
             parameters: {}
         },
-        class: 'node-category-input',
-        deletable: false
+        class: 'node-category-input'
     });
 
     // Initialize with MediaInput node
@@ -483,6 +482,7 @@
         {nodes}
         {edges}
         {isExecuting}
+        {availableNodes}
         onExecute={setRunnerExecute}
         onCanExecuteChange={handleRunnerCanExecuteChange}
     />

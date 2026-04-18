@@ -1,5 +1,5 @@
 from typing import Dict, List, Type
-from ..core.tool import Tool
+from ..core.tool import Tool, InputTool
 from ..tools.base_tools import (
     MediaInputTool,
     ConvertFormatTool,
@@ -111,7 +111,8 @@ class ToolRegistry:
             'description': self._get_tool_description(tool_type),
             'parameter_options': self._get_parameter_options(tool_type),
             'required_inputs': self.get_required_inputs(tool_type),
-            'optional_inputs': self.get_optional_inputs(tool_type)
+            'optional_inputs': self.get_optional_inputs(tool_type),
+            'is_input': issubclass(tool_class, InputTool)
         }
 
     #   Hide any parameter by adding 'hidden': True to its entry in parameter_options:

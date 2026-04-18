@@ -6,6 +6,7 @@
     export let edges;
     export let isExecuting;
     export let onExecute;
+    export let availableNodes;
     export let onCanExecuteChange;
 
     let uploadedImageData = null;
@@ -16,8 +17,11 @@
     let executionProgress = [];
     let executionError = null;
 
-    // Find MediaInput nodes in the workflow
-    $: mediaInputNodes = $nodes.filter(n => n.data?.nodeType === 'MediaInput');
+    // Find input tool nodes in the workflow (any InputTool subclass, not just MediaInput)
+    $: inputNodes = $nodes.filter(n => {
+        const nodeType = n.data?.nodeType;
+        return nodeType && $availableNodes?.[nodeType]?.is_input;
+    });
     $: hasWorkflow = $nodes.length > 0;
 
     // Notify parent when execute capability changes
@@ -92,9 +96,10 @@
         executionProgress = [];
         executionError = null;
 
-        // Inject uploaded image into MediaInput nodes
+        // Inject uploaded image into all input tool nodes
         const workflowNodes = $nodes.map(n => {
-            if (n.data?.nodeType === 'MediaInput') {
+            const nodeType = n.data?.nodeType;
+            if (nodeType && $availableNodes?.[nodeType]?.is_input) {
                 return {
                     ...n,
                     data: {

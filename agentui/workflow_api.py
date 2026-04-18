@@ -29,7 +29,7 @@ from PIL import Image
 
 from .core.workflow import WorkflowEngine
 from .core.registry import registry
-from .core.tool import PortType, ToolOutput
+from .core.tool import PortType, ToolOutput, InputTool
 
 
 class Workflow:
@@ -72,14 +72,16 @@ class Workflow:
         workflow_json = json.dumps(workflow_data)
         core_workflow = WorkflowEngine.from_json(workflow_json, registry.get_all_types())
 
-        # Discover input tools (currently only MediaInput)
+        # Discover input tools (any InputTool subclass)
         input_mapping = {}
+        all_tool_types = registry.get_all_types()
         for node in workflow_data.get('nodes', []):
             node_data = node.get('data', {})
             node_type = node_data.get('nodeType') or node_data.get('toolType')
 
             # Check if this is an input tool
-            if node_type == 'MediaInput':
+            tool_class = all_tool_types.get(node_type)
+            if tool_class and issubclass(tool_class, InputTool):
                 # Map 'image' input name to this tool's ID
                 input_mapping['image'] = node['id']
 
