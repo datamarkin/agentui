@@ -562,13 +562,8 @@ class Florence2(MozoModelToolBase):
 
     @property
     def output_ports(self) -> Dict[str, Port]:
-        # NOTE: Both ports are always defined (static ports required for UI initialization)
-        # Only one will be populated during execution based on task parameter:
-        # - Captioning tasks → "result" populated
-        # - Detection/OCR tasks → "detections" populated
         return {
-            "detections": Port("detections", PortType.DETECTIONS, "Detected objects/text (PixelFlow Detections)"),
-            "result": Port("result", PortType.JSON, "Caption/text result (OpenAI format)")
+            "detections": Port("detections", PortType.DETECTIONS, "Detected objects/text (PixelFlow Detections)")
         }
 
     def process(self) -> bool:
@@ -600,13 +595,8 @@ class Florence2(MozoModelToolBase):
             else:
                 result = model.predict(cv2_image)
 
-            # Handle different output types
-            if 'caption' in task:
-                # Captioning tasks return OpenAI-compatible dict
-                print(f"{self.tool_type}: Generated caption")
-                self.outputs["result"] = ToolOutput(result, PortType.JSON)
-            else:
-                # Detection/OCR tasks return PixelFlow Detections
+            # Detection/OCR tasks return PixelFlow Detections
+            if 'caption' not in task:
                 print(f"{self.tool_type}: Found {len(result)} detections")
                 self.outputs["detections"] = ToolOutput(result, PortType.DETECTIONS)
 
@@ -644,9 +634,7 @@ class VisualQuestionAnswering(MozoModelToolBase):
 
     @property
     def output_ports(self) -> Dict[str, Port]:
-        return {
-            "answer": Port("answer", PortType.JSON, "Answer (OpenAI-compatible format)")
-        }
+        return {}
 
     def process(self) -> bool:
         try:
@@ -678,11 +666,7 @@ class VisualQuestionAnswering(MozoModelToolBase):
             print(f"{self.tool_type}: Asking: '{question}'...")
             answer = model.predict(cv2_image, question=question)
 
-            print(f"{self.tool_type}: Answer received")
-
-            # Set outputs (OpenAI-compatible format)
-            self.outputs["answer"] = ToolOutput(answer, PortType.JSON)
-
+            print(f"{self.tool_type}: Answer: {answer}")
             return True
 
         except Exception as e:

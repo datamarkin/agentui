@@ -1,5 +1,4 @@
 <script>
-    import {getPortTypeClass} from './utils.js';
     import CategoryIcon from './CategoryIcon.svelte';
 
     export let availableNodes;

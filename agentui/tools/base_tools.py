@@ -111,7 +111,7 @@ class SaveImageTool(Tool):
 
     @property
     def output_ports(self) -> Dict[str, Port]:
-        return {"path": Port("path", PortType.STRING, "Saved file path")}
+        return {}
 
     def process(self) -> bool:
         try:
@@ -125,7 +125,6 @@ class SaveImageTool(Tool):
             os.makedirs(os.path.dirname(path) if os.path.dirname(path) else '.', exist_ok=True)
 
             image.save(path)
-            self.outputs["path"] = ToolOutput(path, PortType.STRING)
             return True
         except Exception as e:
             print(f"SaveImage error: {e}")

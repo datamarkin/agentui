@@ -25,19 +25,15 @@ export function formatParameterLabel(key) {
 
 /**
  * Get CSS class for port type colors
- * @param {string} portType - The port type (image, string, number, etc.)
+ * @param {string} portType - The port type (image, detections)
  * @returns {string} CSS class name
  */
 export function getPortTypeClass(portType) {
   const typeClasses = {
-    'image': 'port-color-image',
-    'string': 'port-color-string',
-    'number': 'port-color-number',
-    'json': 'port-color-json',
-    'array': 'port-color-array',
-    'boolean': 'port-color-boolean'
+    'image': 'port-type-image',
+    'detections': 'port-type-detections'
   };
-  return typeClasses[portType] || 'port-color-default';
+  return typeClasses[portType] || 'port-type-image';
 }
 
 /**

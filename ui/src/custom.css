@@ -96,30 +96,6 @@
     background: #bae1ff; /* Blue - PixelFlow Detections objects */
 }
 
-.port-type-string {
-    background: #ffffba; /* Yellow - text data */
-}
-
-.port-type-number {
-    background: #baffc9; /* Green - numeric values */
-}
-
-.port-type-json {
-    background: #ffdfba; /* Orange - JSON objects */
-}
-
-.port-type-array {
-    background: #e0bbff; /* Purple - arrays/lists */
-}
-
-.port-type-boolean {
-    background: #d3d3d3; /* Gray - boolean values */
-}
-
-.port-type-any {
-    background: #ffffff; /* White - accepts any type */
-}
-
 
 /* Make selected edges even thicker */
 /*.svelte-flow__edge.selected .svelte-flow__edge-path {*/
@@ -271,36 +247,6 @@ body.toolbar-hidden .main-content {
     font-size: 16px;
     font-weight: 600;
 }
-
-/* Port type colors - using CSS custom properties */
-.port-color-image {
-    background-color: #3B82F6;
-}
-
-.port-color-string {
-    background-color: #F59E0B;
-}
-
-.port-color-number {
-    background-color: #10B981;
-}
-
-.port-color-json {
-    background-color: #8B5CF6;
-}
-
-.port-color-array {
-    background-color: #EF4444;
-}
-
-.port-color-boolean {
-    background-color: #6B7280;
-}
-
-.port-color-default {
-    background-color: #6B7280;
-}
-
 
 /* NodePalette category styles */
 .category {

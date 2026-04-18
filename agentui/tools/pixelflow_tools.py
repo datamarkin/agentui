@@ -363,7 +363,7 @@ class DrawPolygons(PixelFlowToolBase):
     def input_ports(self) -> Dict[str, Port]:
         return {
             "image": Port("image", PortType.IMAGE, "Input image"),
-            "polygons": Port("polygons", PortType.JSON, "Polygon coordinates")
+            "detections": Port("detections", PortType.DETECTIONS, "Detections with polygon data")
         }
 
     @property
@@ -375,11 +375,11 @@ class DrawPolygons(PixelFlowToolBase):
 
     def process(self) -> bool:
         try:
-            if "image" not in self.inputs or "polygons" not in self.inputs:
+            if "image" not in self.inputs or "detections" not in self.inputs:
                 return False
 
             image = self.inputs["image"].data
-            polygons = self.inputs["polygons"].data
+            polygons = self.inputs["detections"].data
 
             # Convert PIL Image to numpy array if needed
             if isinstance(image, Image.Image):
@@ -576,7 +576,7 @@ class ObjectTracker(PixelFlowToolBase):
     @property
     def output_ports(self) -> Dict[str, Port]:
         return {
-            "tracked_objects": Port("tracked_objects", PortType.JSON, "Tracked objects with IDs")
+            "detections": Port("detections", PortType.DETECTIONS, "Detections with tracking IDs")
         }
 
 
@@ -602,7 +602,7 @@ class ObjectTracker(PixelFlowToolBase):
             # Update tracker with new detections
             tracked_objects = self.tracker.update(detections, image)
 
-            self.outputs["tracked_objects"] = ToolOutput(tracked_objects, PortType.JSON)
+            self.outputs["detections"] = ToolOutput(tracked_objects, PortType.DETECTIONS)
             return True
 
         except Exception as e:
@@ -634,36 +634,32 @@ class ZoneAnalyzer(PixelFlowToolBase):
     def input_ports(self) -> Dict[str, Port]:
         return {
             "image": Port("image", PortType.IMAGE, "Input image"),
-            "detections": Port("detections", PortType.DETECTIONS, "Object detections"),
-            "zone_definitions": Port("zone_definitions", PortType.JSON, "Zone polygon definitions")
+            "detections": Port("detections", PortType.DETECTIONS, "Object detections")
         }
 
     @property
     def output_ports(self) -> Dict[str, Port]:
         return {
-            "zone_analysis": Port("zone_analysis", PortType.JSON, "Zone occupancy analysis"),
+            "detections": Port("detections", PortType.DETECTIONS, "Detections with zone analysis"),
             "annotated_image": Port("annotated_image", PortType.IMAGE, "Image with zones drawn")
         }
 
     def process(self) -> bool:
         try:
-            if "image" not in self.inputs or "detections" not in self.inputs or "zone_definitions" not in self.inputs:
+            if "image" not in self.inputs or "detections" not in self.inputs:
                 return False
 
             image = self.inputs["image"].data
             detections = self.inputs["detections"].data
-            zone_definitions = self.inputs["zone_definitions"].data
 
-            # Initialize zones if not already done
-            if self.zones is None:
+            # Initialize zones from parameters if not already done
+            zone_definitions = self.parameters.get("zone_definitions", [])
+            if self.zones is None and zone_definitions:
                 self.zones = pixelflow.Zones(zone_definitions)
 
             # Convert PIL Image to numpy array if needed
             if isinstance(image, Image.Image):
                 image = np.array(image)
-
-            # Analyze zones
-            zone_analysis = self.zones.analyze(detections)
 
             # Draw zones on image
             annotated = pixelflow.annotate.zones(
@@ -676,7 +672,7 @@ class ZoneAnalyzer(PixelFlowToolBase):
             if isinstance(annotated, np.ndarray):
                 annotated = Image.fromarray(annotated)
 
-            self.outputs["zone_analysis"] = ToolOutput(zone_analysis, PortType.JSON)
+            self.outputs["detections"] = ToolOutput(detections, PortType.DETECTIONS)
             self.outputs["annotated_image"] = ToolOutput(annotated, PortType.IMAGE)
             return True
 

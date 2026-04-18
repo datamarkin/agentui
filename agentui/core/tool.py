@@ -7,13 +7,7 @@ import uuid
 class PortType(Enum):
     """Defines the types of data that can flow between tools"""
     IMAGE = "image"
-    STRING = "string"
-    NUMBER = "number"
-    JSON = "json"
-    ARRAY = "array"
-    BOOLEAN = "boolean"
     DETECTIONS = "detections"  # PixelFlow Detections object
-    ANY = "any"
 
 
 class Port:
@@ -86,7 +80,7 @@ class Tool(ABC):
             port_type = PortType(port_type)
 
         expected_port = self.input_ports[name]
-        if expected_port.type != PortType.ANY and port_type != expected_port.type:
+        if port_type != expected_port.type:
             raise TypeError(f"Expected input type '{expected_port.type.value}' but got '{port_type.value}'")
 
         self.inputs[name] = ToolOutput(value, port_type)

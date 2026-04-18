@@ -734,7 +734,7 @@ class CropAroundDetections(PixelFlowTransformToolBase):
     @property
     def output_ports(self) -> Dict[str, Port]:
         return {
-            "crops": Port("crops", PortType.ARRAY, "List of cropped images")
+            "crops": Port("crops", PortType.IMAGE, "Cropped images around each detection")
         }
 
     def process(self) -> bool:
@@ -769,7 +769,7 @@ class CropAroundDetections(PixelFlowTransformToolBase):
             # Convert crops to PIL images
             crops_pil = [self.cv2_to_pil(crop) for crop in crops_cv2]
 
-            self.outputs["crops"] = ToolOutput(crops_pil, PortType.ARRAY)
+            self.outputs["crops"] = ToolOutput(crops_pil, PortType.IMAGE)
             return True
 
         except Exception as e:
