@@ -41,7 +41,6 @@ class ToolRegistry:
     def __init__(self):
         self._tools: Dict[str, Type[Tool]] = {}
         self._external_metadata: Dict[str, dict] = {}
-        self._tool_info_cache: Dict[str, dict] | None = None
         self._register_builtin_tools()
 
     def _register_builtin_tools(self):
@@ -76,14 +75,12 @@ class ToolRegistry:
         """Register a tool class"""
         tool_instance = tool_class()
         self._tools[tool_instance.tool_type] = tool_class
-        self._tool_info_cache = None
 
     def register_external(self, tool_class: Type[Tool], metadata: dict):
         """Register an externally-defined tool with its UI metadata."""
         tool_instance = tool_class()
         self._tools[tool_instance.tool_type] = tool_class
         self._external_metadata[tool_instance.tool_type] = metadata
-        self._tool_info_cache = None
 
     def get_tool_class(self, tool_type: str) -> Type[Tool]:
         """Get tool class by type"""
@@ -887,11 +884,9 @@ class ToolRegistry:
 
     def get_all_tool_info(self) -> Dict[str, Dict[str, any]]:
         """Get information about all tool types"""
-        if self._tool_info_cache is None:
-            self._tool_info_cache = {
-                tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()
-            }
-        return self._tool_info_cache
+        return {
+            tool_type: self.get_tool_info(tool_type) for tool_type in self._tools.keys()
+        }
 
 
 # Global registry instance
