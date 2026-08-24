@@ -23,6 +23,18 @@ bp = Blueprint(
 )
 
 
+def _serialize_value(value):
+    """Serialize a single output value to a JSON-compatible type."""
+    if hasattr(value, 'save'):  # PIL Image
+        buffer = io.BytesIO()
+        value.save(buffer, format='JPEG')
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        return f"data:image/jpeg;base64,{img_str}"
+    elif hasattr(value, 'to_dict'):  # Detections or similar
+        return value.to_dict()
+    return value
+
+
 def serialize_tool_result(tool_id: str, result: dict) -> dict:
     """Convert tool result to JSON-serializable format."""
     serialized = {
@@ -33,15 +45,10 @@ def serialize_tool_result(tool_id: str, result: dict) -> dict:
     }
 
     for output_name, output_value in result['outputs'].items():
-        if hasattr(output_value, 'save'):  # PIL Image
-            buffer = io.BytesIO()
-            output_value.save(buffer, format='JPEG')
-            img_str = base64.b64encode(buffer.getvalue()).decode()
-            serialized['outputs'][output_name] = f"data:image/jpeg;base64,{img_str}"
-        elif hasattr(output_value, 'to_dict'):  # Detections or similar
-            serialized['outputs'][output_name] = output_value.to_dict()
+        if isinstance(output_value, list):
+            serialized['outputs'][output_name] = [_serialize_value(v) for v in output_value]
         else:
-            serialized['outputs'][output_name] = output_value
+            serialized['outputs'][output_name] = _serialize_value(output_value)
 
     return serialized
 
